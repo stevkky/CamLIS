@@ -85,7 +85,7 @@ $db['default'] = array(
 	'save_queries' => TRUE
 /*
 
-	'dsn'	   => 'pgsql:host=128.199.158.40;port=5432;user=huot.pengleng01@gmail.com;password=postgres@Camlis@!#;dbname=camlis',
+	'dsn'	   => '',
 	'hostname' => 'localhost',
 	'port'	   => 5432,
 	'username' => 'postgres',
