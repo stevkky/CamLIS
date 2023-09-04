@@ -1,0 +1,3 @@
+ERROR - 2023-09-04 23:49:54 --> Severity: 8192 --> explode(): Passing null to parameter #2 ($string) of type string is deprecated /Users/stevkky/Documents/github/stevkky/CamLIS/camlis/application/models/User_model.php 257
+ERROR - 2023-09-04 23:56:18 --> Severity: 8192 --> explode(): Passing null to parameter #2 ($string) of type string is deprecated /Users/stevkky/Documents/github/stevkky/CamLIS/camlis/application/models/User_model.php 257
+ERROR - 2023-09-04 23:56:33 --> Severity: 8192 --> explode(): Passing null to parameter #2 ($string) of type string is deprecated /Users/stevkky/Documents/github/stevkky/CamLIS/camlis/application/models/User_model.php 257

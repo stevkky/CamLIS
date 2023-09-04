@@ -1,0 +1,87 @@
+@font-face {
+    font-family: 'KhmerOS';
+    src: url('../../fonts/KhmerOS.ttf');
+}
+@font-face {
+    font-family: Hanuman;
+    src: url('../../fonts/Hanuman.ttf');
+}
+@font-face {
+    font-family: 'KhmerOS_muollight';
+    src: url('../../fonts/KhmerOS_muollight.ttf');
+}
+
+@font-face {
+    font-family: 'SourceSerifPro-Regular';
+    src: url('../../fonts/SourceSerifPro-Regular.ttf');
+}
+@font-face {
+    font-family: 'SourceSerifPro-Bold';
+    src: url('../../fonts/SourceSerifPro-Bold.ttf');
+}
+.KhmerOS {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS', 'serif';
+}
+.KhmerMoulLight {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS_muollight', 'serif';
+}
+.sourceserifpro-bold {
+    font-family: 'SourceSerifPro-Bold', 'serif';
+}
+body {
+    background: white !important;
+}
+page[size="A4"] {
+    background: white;
+    min-width: 29.7cm;
+    display: block;
+    font-family: 'SourceSerifPro-Regular', 'Hanuman', 'serif';
+    font-size: 12pt;
+    line-height: 23px;
+    page-break-after: always;
+}
+
+table.report-result {
+    width: 100%;
+}
+
+table.report-result,
+table.report-result tr,
+table.report-result th,
+table.report-result td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+table.report-result th,
+table.report-result td {
+    padding: 5px;
+}
+table.report-result td.total {
+    background: #f2f2f2;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-nowrap {
+    white-space: nowrap;
+}
+.text-right {
+    text-align: right;
+}
+
+@media print {
+    @page {
+        margin: 1cm;
+    }
+
+    body,
+    page[size="A4"] {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        background-color: transparent;
+    }
+}

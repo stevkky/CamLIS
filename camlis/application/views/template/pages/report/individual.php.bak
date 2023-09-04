@@ -1,0 +1,177 @@
+ 
+<div class="wrapper col-sm-9"> 
+		<div class="form-vertical"> 
+             <div class="row"> 
+				<div class="col-sm-3">
+                	<input type="hidden" id="patient_sample_id" />
+					<label for="lab_nameKH" class="control-label hint--right hint--error hint--always"><?php echo _t('report.patient_id'); ?></label>
+					<div>
+						<input type="text" class="form-control"  id="patient_id" placeholder="Patient ID"/>
+					</div>
+				</div> 
+                <div class="col-sm-3">
+					<label for="lab_nameKH" class="control-label hint--right hint--error hint--always"><?php echo _t('report.patient_name'); ?></label>
+					<div>
+						<input type="text" class="form-control"  id="patient_name" placeholder="Patient name"/>
+					</div>
+				</div> 
+                <div class="col-sm-3">
+					<label for="lab_nameKH" class="control-label hint--right hint--error hint--always"><?php echo _t('report.sample_number'); ?></label>
+					<div>
+						<input type="text" class="form-control"  id="patient_sample_code" placeholder="patient sample code"/>
+					</div>
+				</div>  
+                <div class="col-sm-3">
+                	<label for="lab_nameKH" class="control-label hint--right hint--error hint--always">&nbsp;</label>
+					<div>
+						<button type="button" id="btnSearchIndvt" class="btn btn-primary"><?php echo _t('report.filter'); ?>&nbsp;&nbsp;
+                    	<i class="fa fa-search"></i></button> 
+					</div>
+                    
+                </div> 
+			</div>  
+		</div>  
+     
+</div>
+
+ 
+ 
+<script>
+	$(function () { 
+		/* look up data patient id
+		 * one character entry
+		 */
+		$("#patient_id").autocomplete({
+			minLength: 1, 
+			source: function(request, response) {
+                        $.ajax({
+                            type	: "POST", 
+                             url	: base_url+'report/lookup_patient_id',
+							 data	: { 
+								filter_val : $("#patient_id").val() 
+							},
+                            dataType: "json",
+                            success	: function (data) {
+								 
+                                if (data != null) {
+
+                                    response(data);
+                                }
+                            },
+                            error: function(result) {
+                                alert("Error");
+                            }
+                        });
+                    },
+			select: function( event , ui ) {
+				// get value patient info to display
+				//getPatientInfo(ui.item.label,1); 
+				var _arr = ui.item.label.split(' - '); 
+				
+				// get value patient info to display
+				getPatientInfo(_arr[1],1); 
+			}
+		}).focus(function(){   
+            $(this).autocomplete("search");
+		}); 
+		
+		/* look up data patient name
+		 * one character entry
+		 */
+		$("#patient_name").autocomplete({
+			minLength: 1, 
+			source: function(request, response) {
+                        $.ajax({
+                            type	: "POST", 
+                             url	: base_url+'report/lookup_patient_name',
+							 data	: { 
+								filter_val : $("#patient_name").val() 
+							},
+                            dataType: "json",
+                            success	: function (data) {
+								 
+                                if (data != null) {
+
+                                    response(data);
+                                }
+                            },
+                            error: function(result) {
+                                alert("Error");
+                            }
+                        });
+                    },
+			select: function( event , ui ) {
+				var _arr = ui.item.label.split(' - '); 
+				
+				// get value patient info to display
+				getPatientInfo(_arr[2],1); 
+			}
+		}).focus(function(){   
+            $(this).autocomplete("search");
+		});
+		
+		/* look up data patient sample code
+		 * one character entry
+		 */
+		$("#patient_sample_code").autocomplete({
+			minLength: 1, 
+			source: function(request, response) {
+                        $.ajax({
+                            type	: "POST", 
+                             url	: base_url+'report/lookup_sample_code',
+							 data	: { 
+								filter_val : $("#patient_sample_code").val() 
+							},
+                            dataType: "json",
+                            success	: function (data) {
+								 
+                                if (data != null) {
+
+                                    response(data);
+                                }
+                            },
+                            error: function(result) {
+                                alert("Error");
+                            }
+                        });
+                    },
+			select: function( event , ui ) {
+				// get value patient info to display
+				getPatientInfo(ui.item.label,3); 
+			}
+		}).focus(function(){   
+            $(this).autocomplete("search");
+		});
+	});
+	
+	/* get patient detail
+	 * function
+	 */
+	function getPatientInfo(val,type){
+		 $.ajax({
+				type	: "POST", 
+				url		: base_url+'report/patient_info',
+				data	: { filter_val : val,type:type  },
+				dataType: "json",
+				success	: function (data) { 
+					//console.log(data[0]); 
+					/* if(type==1){ 
+					 	$("#patient_id").val(data[0].pid);
+					 }else if(type==3){*/
+					 	$("#patient_id").val(data[0].patient_id+' - ' +data[0].sample_number);
+					 	$("#patient_sample_id").val(data[0].ID);
+					 	$("#patient_name").val(data[0].patient_name +' - ' + data[0].patient_id +' - ' +data[0].sample_number);
+					 //}
+				},
+				error: function(result) {
+					alert("Error");
+				}
+			});
+		
+	}
+	
+	
+	
+	
+</script>
+ 

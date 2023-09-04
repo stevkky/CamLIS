@@ -1,0 +1,204 @@
+@font-face {
+    font-family: 'KhmerOS';
+    src: url('../../fonts/KhmerOS.ttf');
+}
+@font-face {
+    font-family: Hanuman;
+    src: url('../../fonts/Hanuman.ttf');
+}
+@font-face {
+    font-family: 'KhmerOS_muollight';
+    src: url('../../fonts/KhmerOS_muollight.ttf');
+}
+@font-face {
+    font-family: 'Tacteng';
+    src: url('../../fonts/Tacteng.ttf');
+}
+
+@font-face {
+    font-family: 'SourceSerifPro-Regular';
+    src: url('../../fonts/SourceSerifPro-Regular.ttf');
+}
+@font-face {
+    font-family: 'SourceSerifPro-Bold';
+    src: url('../../fonts/SourceSerifPro-Bold.ttf');
+}
+@font-face {
+    font-family: 'Dactylog';
+    src: url('../../fonts/DACTYLOG.TTF');
+}
+.KhmerOS {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS', 'serif';
+}
+.KhmerMoulLight {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS_muollight', 'serif';
+}
+.tacteng {
+    font-family: Tacteng !important;
+}
+.sourceserifpro-bold {
+    font-family: 'SourceSerifPro-Bold', 'serif';
+}
+/*body {
+    background: rgb(204, 204, 204);
+}*/
+page[size="A4"] {
+    background: white;
+    width: 21cm;
+    display: block;
+    margin: 10px auto;
+    box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+    padding: 1cm;
+    font-family: 'SourceSerifPro-Regular', 'Noto Sans Khmer', 'serif';
+    font-size: 12pt;
+    line-height: 23px;
+    page-break-after: always;
+}
+
+page[size="A4"], th, td {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+page[size="A4"] table {
+    border-spacing: 2px !important;
+    border-collapse: separate !important;
+}
+
+table th, table td {
+    text-align: left;
+}
+table td {
+    font-weight: normal;
+}
+
+table.patient-info, table.department-sample-info  {
+    border: 1px solid #7a7a7a;
+    line-height: 18px;
+    padding: 3px;
+}
+table.patient-info td, table.patient-info th {
+    vertical-align: top;
+}
+table.department-sample-info {
+   background-color: #ebebeb;
+}
+
+table.test-result {
+    font-family: 'SourceSerifPro-Regular', 'serif';
+}
+table.test-result tr th {
+    border-bottom: 1px solid black;
+}
+table.test-result tr th:not(:last-child), table.test-result tr td:not(:last-child) {
+    padding-right: .2cm;
+}
+table.test-result tr:first-child + tr td {
+    padding-top: 5px;
+}
+
+p.value-pair {
+    position: relative;
+    width: 98%;
+    margin: 0;
+}
+
+p.value-pair:before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 98%;
+    bottom: .2rem;
+    height: 0;
+    line-height: 0;
+    border-bottom: 2px dotted #858585;
+}
+
+p.value-pair .name {
+    background: white;
+    z-index: 1;
+    position: relative;
+    padding-right: 5px;
+}
+
+p.value-pair .value {
+    background: white;
+    z-index: 1;
+    right: 0;
+    position: absolute;
+    padding-left: 5px;
+    font-weight: bold;
+}
+.out-of-range {
+    font-family: 'SourceSerifPro-Bold', 'serif';
+    font-weight: bold;
+    font-size: 13pt;
+}
+
+.text-center {
+    text-align: center;
+}
+.text-left {
+    text-align: left;
+}
+.text-right {
+    text-align: right;
+}
+.text-top {
+    vertical-align: top;
+}
+.text-bottom {
+    vertical-align: bottom;
+}
+.text-middle {
+    vertical-align: middle;
+}
+.text-bold {
+    font-weight: bold;
+}
+.text-no-wrap {
+    white-space: nowrap;
+}
+table.test-result {
+    line-height: 16px;
+}
+#footer {
+    line-height: 17px;
+}
+#footer .laboratory-address td {
+    border-top: 1px solid black;
+    padding-top: 10px;
+}
+#footer .result-footer-signature td {
+    vertical-align: top;
+    padding-bottom: 60px;
+}
+
+@page {
+    margin: 1cm 1cm 0;
+}
+
+@media print {
+    @page {
+        margin: 1cm;
+    }
+
+    body,
+    page[size="A4"] {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        background-color: transparent;
+    }
+
+    tbody.sample-result {
+        page-break-inside: avoid;
+    }
+
+    #footer {
+        display: block;
+        position: fixed;
+        bottom: 0;
+    }
+}

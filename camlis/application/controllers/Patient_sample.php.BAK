@@ -1,0 +1,384 @@
+<?php
+defined('BASEPATH') OR die("Access denied!");
+class Patient_sample extends MY_Controller {
+    public function __construct() {
+        parent::__construct();
+        $this->load->model('patient_sample_model', 'psample_model');
+    }
+
+    /**
+     * Save new patient's sample
+     */
+    public function save() {
+        $this->form_validation->set_rules('patient_sample_id', 'Patient Sample ID', 'trim|less_than_equal_to[0]');
+        $this->form_validation->set_rules('patient_id', 'Patient\'s ID', 'required|trim');
+        $this->form_validation->set_rules('sample_source_id', 'Sample Source', 'required|integer|greater_than[0]');
+        $this->form_validation->set_rules('requester_id', 'Requester', 'required|integer|greater_than[0]');
+        $this->form_validation->set_rules('collected_date', 'collected_date', 'required|trim');
+        $this->form_validation->set_rules('collected_time', 'collected_time', 'required|trim');
+        $this->form_validation->set_rules('received_date', 'received_date', 'required|trim');
+        $this->form_validation->set_rules('received_time', 'received_time', 'required|trim');
+        $this->form_validation->set_rules('is_urgent', 'Urgent', 'required|integer|in_list[0,1]');
+        $this->form_validation->set_rules('payment_needed', 'Payment Needed', 'required|integer|in_list[0,1]');
+        $this->form_validation->set_rules('for_research', 'For Research', 'required|integer|in_list[0,1]');
+        $this->form_validation->set_rules('clinical_history', 'Clinical History', 'trim');
+        $this->form_validation->set_rules('collected_date_time', 'collected_date_time', 'required|differs[received_date_time]');
+
+        $status         = FALSE;
+        $msg            = _t("global.msg.fill_required_data");
+        $psample_info   = array();
+        $patient        = elements(['pid', 'name', 'sex', 'dob', 'phone', 'province', 'district', 'commune', 'village'], (array)$this->input->post('patient'));
+
+        if ($this->form_validation->run() === TRUE && !empty($patient['pid'])) {
+            $msg             = _t("global.msg.save_fail");
+            $data            = elements(['patient_id', 'sample_source_id', 'requester_id', 'collected_date', 'collected_time', 'received_date', 'received_time', 'is_urgent', 'payment_needed', 'for_research', 'clinical_history','sample_number'], $this->input->post());
+            $isPMRSPatientID = isPMRSPatientID($patient['pid']);
+            $isSavedPatient  = FALSE;
+
+            if ($isPMRSPatientID) {
+                $this->load->model('patient_model');
+                $isSavedPatient = $this->patient_model->save_pmrs_patient($patient['pid'], $patient['name'], $patient['sex'], $patient['dob'], $patient['phone'], $patient['province'], $patient['district'], $patient['commune'], $patient['village']);
+            }
+
+            if (!$isPMRSPatientID || ($isPMRSPatientID && $isSavedPatient)) {
+                // get sample number by auto format 0000-ddmmyy
+                $psample_id = $this->psample_model->add_patient_sample($data);
+
+                if ($psample_id > 0) {
+                    $status = FALSE;
+                    $msg    = _t("global.msg.save_success");
+                    $info   = $this->psample_model->get_patient_sample(array('psample.ID' => $psample_id));
+                    if (count($info) > 0) {
+                        $psample_info = $info[0];
+                        $psample_info['users'] = $this->psample_model->get_patient_sample_user($psample_id);
+                    }
+                }
+
+                $is_assign_test = $this->input->post('is_assign_test');
+                $sample_tests   = $this->input->post('sample_tests');
+                $sample_details = $this->input->post('sample_details');
+                if ($psample_id > 0 && (int)$is_assign_test == 200 && is_array($sample_tests) && count($sample_tests) > 0) {
+                    $this->psample_model->assign_sample_test($psample_id, $sample_tests);
+                    $this->psample_model->set_psample_detail($psample_id, $sample_details);
+                    $this->psample_model->update_progress_status($psample_id);
+                }
+            }
+        }
+
+        $data['result'] = json_encode(array('status' => $status, 'msg' => $msg, 'data' => $psample_info));
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Update patient's sample
+     */
+    public function update() {
+        $this->form_validation->set_rules('patient_sample_id', 'Patient Sample ID', 'required|trim|greater_than[0]|integer');
+        $this->form_validation->set_rules('patient_id', 'Patient\'s ID', 'required|trim');
+        $this->form_validation->set_rules('sample_source_id', 'Sample Source', 'required|integer|greater_than[0]');
+        $this->form_validation->set_rules('requester_id', 'Requester', 'required|integer|greater_than[0]');
+        $this->form_validation->set_rules('collected_date', 'collected_date', 'required|trim');
+        $this->form_validation->set_rules('collected_time', 'collected_time', 'required|trim');
+        $this->form_validation->set_rules('received_date', 'received_date', 'required|trim');
+        $this->form_validation->set_rules('received_time', 'received_time', 'required|trim');
+        $this->form_validation->set_rules('is_urgent', 'Urgent', 'required|integer|in_list[0,1]');
+        $this->form_validation->set_rules('payment_needed', 'Payment Needed', 'required|integer|in_list[0,1]');
+        $this->form_validation->set_rules('for_research', 'For Research', 'required|integer|in_list[0,1]');
+
+        $this->form_validation->set_rules('collected_date_time', 'collected_date_time', 'required|differs[received_date_time]');
+
+        $status         = FALSE;
+        $msg            = _t("global.msg.fill_required_data");
+        $psample_info   = array();
+        $patient        = elements(['pid', 'name', 'sex', 'dob', 'phone', 'province', 'district', 'commune', 'village'], (array)$this->input->post('patient'));
+
+        if ($this->form_validation->run() === TRUE && !empty($patient['pid'])) {
+            $msg             = _t("global.msg.save_fail");
+            $data            = elements(array('patient_id', 'sample_source_id', 'requester_id', 'collected_date', 'collected_time', 'received_date', 'received_time', 'is_urgent', 'payment_needed', 'for_research', 'clinical_history'), $this->input->post());
+            $psample_id      = $this->input->post('patient_sample_id');
+            $isPMRSPatientID = isPMRSPatientID($patient['pid']);
+            $isSavedPatient  = FALSE;
+
+            if ($isPMRSPatientID) {
+                $this->load->model('patient_model');
+                $isSavedPatient = $this->patient_model->save_pmrs_patient($patient['pid'], $patient['name'], $patient['sex'], $patient['dob'], $patient['phone'], $patient['province'], $patient['district'], $patient['commune'], $patient['village']);
+            }
+
+            if (!$isPMRSPatientID || ($isPMRSPatientID && $isSavedPatient)) {
+                if ($this->psample_model->update_patient_sample($psample_id, $data) > 0) {
+                    $status = FALSE;
+                    $msg    = _t("global.msg.update_success");
+                    $info   = $this->psample_model->get_patient_sample(array('psample.ID' => $psample_id));
+                    if (count($info) > 0) {
+                        $psample_info = $info[0];
+                        $psample_info['users'] = $this->psample_model->get_patient_sample_user($psample_id);
+                    }
+                }
+
+                $is_assign_test = $this->input->post('is_assign_test');
+                $sample_tests   = $this->input->post('sample_tests');
+                $sample_details = $this->input->post('sample_details');
+                if ($psample_id > 0 && (int)$is_assign_test == 200 && is_array($sample_tests) && count($sample_tests) > 0) {
+                    $this->psample_model->assign_sample_test($psample_id, $sample_tests);
+                    $this->psample_model->set_psample_detail($psample_id, $sample_details);
+                    $this->psample_model->update_progress_status($psample_id);
+                }
+            }
+        }
+
+        $data['result'] = json_encode(array('status' => $status, 'msg' => $msg, 'data' => $psample_info));
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Delete patient's sample
+     */
+    public function delete() {
+        $psample_id = $this->input->post('patient_sample_id');
+        $status = FALSE;
+        $msg	= _t('global.msg.delete_fail');
+        if ((int)$psample_id > 0) {
+            $result = $this->psample_model->delete_patient_sample($psample_id);
+            if ($result > 0) {
+                $status = FALSE;
+                $msg	= _t('global.msg.delete_success');
+            }
+        }
+
+        $data['result'] = json_encode(array('status' => $status, 'msg' => $msg));
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Get Test of Patient's Sample
+     */
+    public function get_patient_sample_test() {
+        $psample_id = $this->input->post('patient_sample_id');
+        $rejection  = $this->input->post('rejection');
+        $patient_id  = $this->input->post('patient_id');
+        $result = array();
+
+        if ((int)$psample_id > 0) {
+
+            $this->load->model(['patient_model']);
+
+            $result['sample_tests'] = $this->psample_model->get_patient_sample_test($psample_id);
+            $result['sample_details'] = $this->psample_model->get_patient_sample_detail($psample_id);
+            $result['patient_sample']	= $this->psample_model->get_patient_sample(array('psample.ID' => $psample_id));
+            $result['patient'] = $this->patient_model->get_patient_info($patient_id);
+
+            if ((int)$rejection == 200) {
+                $this->load->helper('sample_test');
+                $result['patient_sample'] = $this->psample_model->get_patient_sample(array('psample.ID' => $psample_id))[0];
+                $result['sample_tests'] = sample_test_hierarchy($result['sample_tests'], TRUE);
+            }
+        }
+
+        $data['result'] = json_encode($result);
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Set Reject Sample/Test
+     */
+    public function set_rejection() {
+        $this->form_validation->set_rules('patient_sample_id', 'patient_sample_id', 'required|integer|greater_than[0]');
+        $this->form_validation->set_rules('reject_comment', 'reject_comment', 'trim');
+        $this->form_validation->set_rules('reject_sample', 'reject_sample', 'in_list[0,1]');
+        $psample_id		= $this->input->post('patient_sample_id');
+        $reject_sample	= $this->input->post('reject_sample');
+        $reject_comment	= $this->input->post('reject_comment');
+        $reject_tests	= $this->input->post('reject_tests');
+        $reject_tests   = empty($reject_tests) ? [] : $reject_tests;
+        $status = FALSE;
+        $msg    = _t("global.msg.fill_required_data");
+
+        if ($this->form_validation->run() === TRUE) {
+            $msg	= _t("global.msg.save_fail");
+            $result	 = $this->psample_model->update_patient_sample($psample_id, array('reject_comment' => $reject_comment, 'is_rejected' => $reject_sample));
+            $result += $this->psample_model->set_rejected_test($psample_id, $reject_tests);
+            if ($result > 0) {
+                $status = FALSE;
+                $msg  = _t("global.msg.update_success");
+            }
+        }
+
+        $data['result'] = json_encode(array('status' => $status, 'msg' => $msg));
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Get Patient's Sample Info/Assigned Test/Result
+     */
+    public function get_patient_sample_details() {
+        $this->load->model(['result_model', 'patient_model', 'test_model', 'reference_range_model']);
+        $this->load->helper(['sample_test', 'util']);
+        $psample_id  = $this->input->post('patient_sample_id');
+        $patient_age = $this->input->post('patient_age');
+        $patient_sex = $this->input->post('patient_sex');
+        $result      = array();
+
+        if ((int)$psample_id > 0) {
+            //Patient's info and Patient's sample
+            /*$patient_sample	= $this->psample_model->get_patient_sample(array('psample.ID' => $psample_id));
+            $patient_sample	= count($patient_sample) > 0 ? $patient_sample[0] : NULL;
+            $patient_id		= $patient_sample ? $patient_sample['patient_id'] : NULL;
+            $patient_info	= $this->patient_model->get_patient_info($patient_id);*/
+
+            //Sample Results
+            $_tmp_result	= $this->result_model->get_patient_sample_result($psample_id);
+            $ptest_result	= array();
+            if (count($_tmp_result) > 0) {
+                foreach ($_tmp_result as $row) {
+                    $patient_test_id = $row['patient_test_id'];
+                    if (in_array($row['field_type'], array(1, 2)) && $row['type'] == 1) {
+                        if (!isset($ptest_result[$patient_test_id])) {
+                            $ptest_result[$patient_test_id] = elements(array('patient_test_id', 'sample_test_id', 'field_type', 'is_rejected', 'test_date', 'performer_id'),$row);
+                            $ptest_result[$patient_test_id]['result'] = array();
+                        }
+                        $test_organism_id = $row['result'];
+                        if (!isset($ptest_result[$patient_test_id]['result'][$test_organism_id])) {
+                            $ptest_result[$patient_test_id]['result'][$test_organism_id] = array(
+                                'test_organism_id' => $test_organism_id,
+                                'organism_name' => $row['organism_name'],
+                                'quantity_id' => $row['quantity_id'],
+                                'antibiotic' => array()
+                            );
+                        }
+                        if ($row['antibiotic_id'] > 0 && isset($ptest_result[$patient_test_id]['result'][$test_organism_id])) {
+                            $ptest_result[$patient_test_id]['result'][$test_organism_id]['antibiotic'][] = elements(array('antibiotic_id', 'sensitivity', 'test_zone', 'invisible'), $row);
+                        }
+                    } else {
+                        $ptest_result[$patient_test_id] = elements(array('patient_test_id', 'sample_test_id', 'field_type', 'is_rejected', 'result', 'test_date', 'performer_id'),$row);
+                    }
+                }
+                //Reindex result
+                foreach ($ptest_result as $key => $item) {
+                    if (is_array($item['result'])) {
+                        $ptest_result[$key]['result'] = array_values($item['result']);
+                    }
+                }
+            }
+
+            //Test of Patient's sample
+            $psample_tests      = $this->psample_model->get_patient_sample_test($psample_id);
+
+            //Get Ref. Ranges
+            $sample_test_id       = array_column($psample_tests, 'sample_test_id');
+            $age                  = $patient_age;
+            $gender               = !is_numeric($patient_sex) && $patient_sex == 'M' ? MALE : FEMALE;
+            $std_reference_ranges = collect($this->reference_range_model->get_std_reference_range($sample_test_id))->groupBy(function($item, $key) { return 'sample-test-'.$item['sample_test_id']; });
+            $lab_reference_ranges = collect($this->reference_range_model->get_lab_reference_range($sample_test_id))->groupBy(function($item, $key) { return 'sample-test-'.$item['sample_test_id']; });
+            $_reference_ranges    = $std_reference_ranges->merge($lab_reference_ranges)->flatten(1)->toArray();
+            $reference_ranges     = [];
+
+            if ($_reference_ranges) {
+                foreach ($_reference_ranges as $ref_range) {
+                    if (isset($reference_ranges[$ref_range['sample_test_id']])) continue;
+                    $min_age = (int)($ref_range['min_age'] * $ref_range['min_age_unit']);
+                    $max_age = (int)($ref_range['max_age'] * $ref_range['max_age_unit']);
+
+                    if ($ref_range['is_equal'] == 1 && ($age >= $min_age && $age <= $max_age) && ($ref_range['gender'] == 3 || $ref_range['gender'] == $gender))
+                    {
+                        $reference_ranges[$ref_range['sample_test_id']] = array('min_value' => $ref_range['min_value'], 'range_sign' => $ref_range['range_sign'], 'max_value' => $ref_range['max_value']);
+                    } else if ($age >= $min_age && $age < $max_age && ($ref_range['gender'] == 3 || $ref_range['gender'] == $gender))
+                    {
+                        $reference_ranges[$ref_range['sample_test_id']] = array('min_value' => $ref_range['min_value'], 'range_sign' => $ref_range['range_sign'], 'max_value' => $ref_range['max_value']);
+                    }
+                }
+            }
+
+            $result['patient']			= [];
+            $result['patient_sample']	= [];
+            $result['sample_tests']		= sample_test_hierarchy(reindexArray(convertToHierarchy($psample_tests, 'sample_test_id', 'testPID', 'childs'), 'childs'), TRUE);
+            $result['results']			= $ptest_result;
+            $result['ref_ranges']		= $reference_ranges;
+        }
+
+        $data['result'] = json_encode($result);
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Update patient's sample printed info
+     */
+    public function update_printed_info() {
+        $psample_id = $this->input->post('patient_sample_id');
+        $status = FALSE;
+        if ((int)$psample_id > 0) {
+            $result = $this->psample_model->update_printed_info($psample_id);
+            if ($result > 0) $status = FALSE;
+        }
+        $data['result'] = json_encode(array('status' => $status));
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Get Pateint Sample
+     */
+    public function get_patient_sample() {
+        $patient_id         = $this->input->post('patient_id');
+        $patient_sample_id  = $this->input->post('patient_sample_id');
+        $patient_samples    = $this->psample_model->get_patient_sample(FALSE, $patient_id);
+
+        $data['result']     = json_encode(['patient_samples' => $patient_samples]);
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * View patient's sample using DataTable
+     */
+    public function view_all_patient_sample() {
+        $this->load->library('patientwebservice');
+        $reqData			= $this->input->post();
+        $_data['reqData']	= $reqData;
+
+        $result				= $this->psample_model->view_all_patient_sample($_data);
+        $data['result']		= json_encode($result);
+
+        $this->load->view('ajax_view/view_result', $data);
+    }
+    /**
+     * View patient's sample using DataTable
+     */
+    public function view_all_patient_sample_urgent() {
+        $this->load->library('patientwebservice');
+        $reqData			= $this->input->post();
+        $_data['reqData']	= $reqData;
+
+        $result				= $this->psample_model->view_all_patient_sample_urgent($_data);
+        $data['result']		= json_encode($result);
+
+        $this->load->view('ajax_view/view_result', $data);
+    }
+
+    /**
+     * Print Patient's sample test
+     * @param $patient_sample_id
+     * @param string $action
+     */
+    public function preview_rejected_test($patient_sample_id, $action = 'preview') {
+        $this->load->helper("sample_test");
+        $this->load->model(['patient_sample_model', 'laboratory_model', 'patient_model']);
+
+        /* Get Patient's Sample */
+        $patient_sample	 = collect($this->patient_sample_model->get_patient_sample(array('psample.ID' => $patient_sample_id)))->first();
+        $psample_details = collect($this->patient_sample_model->get_patient_sample_detail($patient_sample_id))->keyBy('department_sample_id')->toArray();
+        $patient_id		 = collect($patient_sample)->get('patient_id');
+        $patient_info	 = isPMRSPatientID($patient_id) ? $this->patient_model->get_pmrs_patient($patient_id) : $this->patient_model->get_outside_patient($patient_id);
+
+        //Test of Patient's sample
+        $psample_tests  = collect($this->patient_sample_model->get_patient_sample_test($patient_sample_id))->filter(function($value) {
+            return $value['is_rejected'] > 0 && !empty($value['group_result']);
+        })->unique('group_result')->toArray();
+
+        $this->data['patient']              = $patient_info;
+        $this->data['patient_sample']       = $patient_sample;
+        $this->data['psample_details']      = $psample_details;
+        $this->data['psample_tests']        = sample_test_hierarchy(sample_test_hierarchy_row(convertToHierarchy($psample_tests, 'sample_test_id', 'testPID', 'childs', 'level')));
+        $this->data['action']               = $action;
+        $this->data['laboratory_variables'] = (array)$this->laboratory_model->get_variables();
+
+        $this->load->view('template/print/psample_rejected_test.php', $this->data);
+    }
+}

@@ -1,0 +1,45 @@
+#lab-list-wrapper {
+    
+}
+#lab-list-wrapper a.item {
+    display: block;
+    margin-bottom: 10px;
+    width: 400px;
+    height: 130px;
+    float: left;
+    margin-left: 15px;
+    border:1px solid #cccccc;
+    padding:5px 0;
+    box-shadow: 0 3px 3px -2px #9a9a9a;
+    cursor: pointer;
+    color:black;
+}
+#lab-list-wrapper a.item:hover {
+    border-bottom: 3px solid dodgerblue;
+}
+#lab-list-wrapper a.item:after {
+    content: '';
+    display: block;
+    clear:both;
+}
+#lab-list-wrapper a.item div.image {
+    padding : 10px 10px;
+    float : left;
+}
+#lab-list-wrapper a.item div.image img {
+    width: 60px;
+}
+#lab-list-wrapper a.item div.image *{
+    font-size:30pt;
+} 
+#lab-list-wrapper a.item div.caption {
+    float: left;
+    width: 315px;
+}
+#lab-list-wrapper a.item div.caption h5{
+    font-weight: bold;
+    line-height: 20px;
+}
+#lab-list-wrapper a.item div.location-wrapper i{
+    margin-right:5px;
+}

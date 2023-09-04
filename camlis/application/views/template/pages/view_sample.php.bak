@@ -1,0 +1,113 @@
+<div class="col-sm-12">
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#tab1" data-tab-name="urgent">
+                    Urgent</a></li>
+            <li><a data-toggle="tab" href="#tab2" data-tab-name="routine">
+                    Routine</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab1" class="tab-pane fade in active">
+                <table class="table table-bordered table-striped dataTable nowrap" id="tb_sample_urgent">
+                    <thead>
+                    <th style="width:40px;"><?php echo _t('global.no.'); ?></th>
+                    <th style="width:200px;"><?php echo _t('patient.patient_id'); ?></th>
+                    <th><?php echo _t('patient.patient_name'); ?></th>
+                    <th><?php echo _t('sample.sample_number'); ?></th>
+                    <th><?php echo _t('sample.collect_dt'); ?></th>
+                    <th><?php echo _t('sample.receive_dt'); ?></th>
+                    <th><?php echo _t('global.patient_status'); ?></th>
+                    <th class="text-center"></th>
+                    </thead>
+                </table>
+            </div>
+            <div id="tab2" class="tab-pane fade in">
+                <div style="border:0px solid #EEE; width:100%; ">
+                    <div style="float: right; margin-left: 10px; position: relative">
+                        <select class="form-control input-sm" id="slsample_search" style="width:160px; margin-bottom: 15px;">
+                            <option value="0"> --- all --- </option>
+                            <option value="Progress" style="color:yellow;"><?php echo _t('global.Progress'); ?></option>
+                            <option value="Pending" style="color:red;"><?php echo _t('global.Pending'); ?></option>
+                            <option value="Complete" style="color:#0faf0f;"><?php echo _t('global.Complete'); ?></option>
+                        </select>
+                    </div>
+                    <div style=" float: right; margin-top: 10px;">
+                        <b style="font-weight: 700;"><?php echo _t('global.show_by'); ?></b>
+                    </div>
+                </div>
+
+                <div style="clear: both;"></div>
+                <input type="hidden" name="laboratory_id" id="laboratory_id" value="<?php echo $laboratoryInfo->labID; ?>">
+                <table style="width: 100%" class="table table-bordered table-striped dataTable nowrap" id="tb_sample">
+                    <thead>
+                    <th style="width:40px;"><?php echo _t('global.no.'); ?></th>
+                    <th style="width:200px;"><?php echo _t('patient.patient_id'); ?></th>
+                    <th><?php echo _t('patient.patient_name'); ?></th>
+                    <th><?php echo _t('sample.sample_number'); ?></th>
+                    <th><?php echo _t('sample.collect_dt'); ?></th>
+                    <th><?php echo _t('sample.receive_dt'); ?></th>
+                    <th><?php echo _t('global.patient_status'); ?></th>
+                    <th class="text-center"></th>
+                    </thead>
+                </table>
+            </div>
+
+
+    </div>
+</div>
+
+
+
+<!--h4 class="sub-header">&nbsp;&nbsp;Urgent<hr /></h4>
+<div class="col-sm-12">
+	<table class="table table-bordered table-striped dataTable nowrap" id="tb_sample_urgent">
+		<thead>
+			<th style="width:40px;"><?php echo _t('global.no.'); ?></th>
+			<th style="width:200px;"><?php echo _t('patient.patient_id'); ?></th>
+			<th><?php echo _t('patient.patient_name'); ?></th>
+			<th><?php echo _t('sample.sample_number'); ?></th>
+			<th><?php echo _t('sample.collect_dt'); ?></th>
+			<th><?php echo _t('sample.receive_dt'); ?></th>
+			<th><?php echo _t('global.patient_status'); ?></th>
+			<th class="text-center"></th>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div>
+
+
+<h4 class="sub-header">&nbsp;&nbsp;Routine <hr /></h4>
+<div style="border:0px solid #EEE; width:99%; margin-top: -80px;">
+    <div style="float: right; margin-left: 10px; position: relative">
+        <select class="form-control input-sm" id="slsample_search" style="width:160px; margin-bottom: 15px;">
+            <option value="0"> --- all --- </option>
+            <option value="Progress" style="color:yellow;"><?php echo _t('global.Progress'); ?></option>
+            <option value="Pending" style="color:red;"><?php echo _t('global.Pending'); ?></option>
+            <option value="Complete" style="color:#0faf0f;"><?php echo _t('global.Complete'); ?></option>
+        </select>
+    </div>
+    <div style=" float: right; margin-top: 10px;">
+        <b style="font-weight: 700;"><?php echo _t('global.show_by'); ?></b>
+    </div>
+</div>
+<div style="clear: both;"></div>
+<div class="col-sm-12">
+
+	<input type="hidden" name="laboratory_id" id="laboratory_id" value="<?php echo $laboratoryInfo->labID; ?>">
+	<table class="table table-bordered table-striped dataTable nowrap" id="tb_sample">
+		<thead>
+			<th style="width:40px;"><?php echo _t('global.no.'); ?></th>
+			<th style="width:200px;"><?php echo _t('patient.patient_id'); ?></th>
+			<th><?php echo _t('patient.patient_name'); ?></th>
+			<th><?php echo _t('sample.sample_number'); ?></th>
+			<th><?php echo _t('sample.collect_dt'); ?></th>
+			<th><?php echo _t('sample.receive_dt'); ?></th>
+			<th><?php echo _t('global.patient_status'); ?></th>
+			<th class="text-center"></th>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div-->

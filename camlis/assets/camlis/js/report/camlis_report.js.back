@@ -1,0 +1,249 @@
+$(document).ready(function (){  
+	/*
+		 
+		var tbl_aggregated = $("#tbl-aggregated").DataTable({
+			"filter"		: false,
+			"info"			: false,
+			"paging"		: false,
+			"ordering"		: false,  
+			"processing"	: true,
+			"serverSide"	: true ,  
+			dom: 'Bfrtip',
+			buttons: [{
+					extend		: 'print',
+					text		: 'Print <i class="fa fa-print"></i>',
+					titleAttr	: 'Print'  
+				}
+			], 
+			 
+			"ajax"       : {
+				"url"    : base_url+'report/aggregate_list',
+				"type"   : 'POST',
+				 data	 : function(d) {
+					d.start = $("#criteria_start").val();
+					d.end = $("#criteria_end").val();
+				}, 
+				"destroy" : true 
+			}, 
+			"language"   : dataTableOption.language,
+			"columns"    : [ 
+				{ "data" : "name_kh" },
+				{ "data" : "male" },
+				{ "data" : "female" },
+				{ "data" : "total" }
+			],
+			"order": [[0, 'asc']]  
+		}); */
+		
+		/*
+			summary report/ aggregated
+		*/
+		$("#btnSearchAggre").click(function(evt) {
+			 
+			evt.preventDefault();
+			var hasErr = 0;
+			var sms = 0;
+			
+			var arrS = $("#criteria_start").val().split('/');
+			var arrE = $("#criteria_end").val().split('/');
+			  
+			
+			if($("#criteria_start").val() === '' || $("#criteria_start").val() === null){
+				hasErr = 1;
+				sms = msg_required_data;  
+				//$("label[for=ct_end]").attr("data-hint", msg_required_data); 
+			}
+			if($("#criteria_end").val() === '' || $("#criteria_start").val() === null){
+				hasErr = 1;
+				sms = msg_required_data; 
+			}
+			if(new Date(arrS[1]+'/'+arrS[0]+'/'+arrS[2]) > new Date(arrE[1]+'/'+arrE[0]+'/'+arrE[2])){
+				hasErr = 1;
+				sms = date_required_startend; 
+			}
+			
+			//
+			if (hasErr > 0) {
+				myDialog.showDialog('show', {
+					text	: sms,
+					status	: '',
+					style	: 'warning'
+				});
+	
+				return false;
+			}
+			 myDialog.showProgress('show');
+			// 
+			$.ajax({
+					  method: "POST",
+					  url	: base_url+'report/aggregate_list',
+					  data	: { 
+						start : $("#criteria_start").val(),
+						end : $("#criteria_end").val()
+					},
+					success: function(msg) {
+						$('#btnPrint').removeAttr('disabled');
+						$('#tbody_data_aggregated').html(msg); 
+						myDialog.showProgress('hide');
+					} 
+				});
+		});
+		
+		
+		
+		/*
+			award function
+		*/
+		$("#btnSearchAward").click(function(evt) {
+			 
+			evt.preventDefault();
+			var hasErr = 0;
+			var sms = 0;
+			var arrS = $("#criteria_start").val().split('/');
+			var arrE = $("#criteria_end").val().split('/');
+			 
+			 
+			if($("#criteria_start").val() === '' || $("#criteria_start").val() === null){
+				hasErr = 1;
+				sms = msg_required_data;   
+			}
+			if($("#criteria_end").val() === '' || $("#criteria_end").val() === null){
+				hasErr = 1;
+				sms = msg_required_data; 
+			}
+			if(new Date(arrS[1]+'/'+arrS[0]+'/'+arrS[2]) > new Date(arrE[1]+'/'+arrE[0]+'/'+arrE[2])){
+				hasErr = 1;
+				sms = date_required_startend; 
+			}
+			
+			//
+			if (hasErr > 0) {
+				myDialog.showDialog('show', {
+					text	: sms,
+					status	: '',
+					style	: 'warning'
+				});
+	
+				return false;
+			}
+			 //$('#prog').progressbar({ value: 0 });
+			 myDialog.showProgress('show');
+			// 
+			$.ajax({
+					  method: "POST",
+					  url	: base_url+'report/ward_list',
+					  data	: { 
+						start : $("#criteria_start").val(),
+						end : $("#criteria_end").val()
+					},
+					success: function(msg) {
+						$('#btnPrint').removeAttr('disabled');
+						$('#tbody_data_ward').html(msg); 
+						myDialog.showProgress('hide');
+					} 
+				});
+		});
+		
+		
+		// individual report
+		$('#btnSearchIndvt').on('click',function(e){
+			e.preventDefault();
+			
+			//
+			var pid = $("#patient_sample_id").val(); 
+			
+			
+			//console.log(pid);
+			
+			if(pid==''){
+				myDialog.showDialog('show', {
+					text	: 'Patient ID not allow empty.',
+					status	: '',
+					style	: 'warning'
+				});
+				return false;
+			}
+			//
+			$("#print_preview_modal").data("patient_sample_id", pid);
+			$("#print_preview_modal").css("background", 'rgba(0, 0, 0, 0.54)');
+	
+			$("#print_preview_modal #doPrinting").off("click").on("click", function (evt) {
+				e.preventDefault();
+				printpage(base_url + "result/preview_psample_result/"+pid+"/print");
+			});
+	
+			//Show Progress
+			myDialog.showProgress('show', { text : 'loading...' });
+			
+			$.ajax({
+				url		: base_url + "result/preview_psample_result/"+pid,
+				type	: 'POST',
+				success	: function (resText) {
+					$("#print_preview_modal").find(".modal-dialog").html(resText);
+					
+					setTimeout(function() {
+						myDialog.showProgress('hide');
+						$("#print_preview_modal").modal("show");
+					}, 400);
+				}
+			});
+		});
+	
+		$("#print_preview_modal").on("hidden.bs.modal", function () {
+			$("#print_preview_modal").find(".modal-dialog").empty();
+		});
+		
+		
+		// bacteriology report
+		$('#btnSearchBacteriology').on('click',function(e){
+			e.preventDefault(); 
+			var obj = {
+						_labo_type 	: $('#sllabo_type').val(),
+						_department : $('#sldepartment').val(),
+						_start 		: $('#criteria_start').val(),
+						_end 		: $('#criteria_end').val(),
+						_sample_type: $('#slsample_type').val(),
+						_testing 	: $('#sltesting').val(),
+						_result 	: $('#slresult').val(),
+						_labo_number: $('#txtlabo_number').val()
+					};
+
+				var data = new Array();
+				data.push(obj);
+			
+			
+			$("#print_preview_modal").data("patient_sample_id", data);  
+			$("#print_preview_modal").css("background", 'rgba(0, 0, 0, 0.54)');
+	
+			$("#print_preview_modal #doPrinting").off("click").on("click", function (evt) {
+				e.preventDefault();
+				printpage(base_url + "report/preview_pbacteriology_result/print");
+			});
+	
+			//Show Progress
+			myDialog.showProgress('show', { text : 'loading...' });
+			
+			$.ajax({
+				method: "POST",
+				url		: base_url + "report/preview_pbacteriology_result/",
+				data	: obj,
+				type	: 'JSON',
+				success	: function (resText) {
+					$("#print_preview_modal").find(".modal-dialog").html(resText);
+					
+					setTimeout(function() {
+						myDialog.showProgress('hide');
+						$("#print_preview_modal").modal("show");
+					}, 400);
+				}
+			});
+		});
+	
+		$("#print_preview_modal").on("hidden.bs.modal", function () {
+			$("#print_preview_modal").find(".modal-dialog").empty();
+		});
+			 
+			 
+ 
+   
+});

@@ -1,0 +1,564 @@
+<?php
+defined('BASEPATH') OR die('Access denied!');
+class Report extends MY_Controller {
+    public function __construct() {
+        parent::__construct();
+
+        $this->app_language->load(array('sample','report'));
+        $this->load->model(array('report_model' => 'rModel'));
+
+        $this->template->plugins->add(['DataTable','MomentJS','BootstrapDateTimePicker']);
+        $this->template->stylesheet->add('assets/camlis/css/camlis_admin_style.css');
+        $this->template->stylesheet->add('assets/camlis/css/camlis_sample_style.css');
+        $this->template->content_title = _t('report.report');
+
+
+    }
+    public function index() {
+        $this->load->database();
+        $this->load->library('DataTable');
+
+        $obj		= new stdClass();
+        $obj->user_id = $this->session->id;
+        $this->data['report_name'] = $this->rModel->get_report_name($obj);
+
+        //$this->aggregated();
+        $this->individual();
+        //$this->template->content->view('template/pages/report/page_report', $this->data);
+        //$this->template->publish();
+    }
+
+
+    /* lookup data sample code
+     *
+     */
+    public function lookup_patient_id(){
+        $obj		= new stdClass();
+        $obj->val = $this->input->post('filter_val');
+        $rows   = $this->rModel->lookup_patient_id($obj);
+
+
+        $json_array = array();
+        foreach ($rows as $row){
+            array_push($json_array, $row->pid.' - '.$row->sample_number);
+        }
+ 
+        echo json_encode($json_array);
+
+    }
+
+    /* lookup data patient name
+     *
+     */
+    public function lookup_patient_name(){
+
+        $obj		= new stdClass();
+        $obj->val = $this->input->post('filter_val');
+        $rows   = $this->rModel->lookup_patient_name($obj);
+
+        $json_array = array();
+        foreach ($rows as $row){
+            array_push($json_array, $row->patient_name.' - '.$row->pid.' - '.$row->sample_number);
+        }
+ 
+        echo json_encode($json_array);
+
+    }
+
+    /* lookup data sample code
+     *
+     */
+    public function lookup_sample_code(){
+        $obj		= new stdClass();
+        $obj->val = $this->input->post('filter_val');
+        $rows   = $this->rModel->lookup_sample_code($obj);
+
+
+        $json_array = array();
+        foreach ($rows as $row){
+            array_push($json_array, $row->sample_number);
+        }
+ 
+        echo json_encode($json_array);
+
+    }
+    /* lookup data lookup labo_number
+     *
+     */
+    public function lookup_labo_number(){
+        $obj		= new stdClass();
+        $obj->val = $this->input->post('filter_val');
+        $rows   = $this->rModel->lookup_labo_number($obj);
+
+
+        $json_array = array();
+        foreach ($rows as $row){
+            array_push($json_array, $row->sample_number);
+        }
+ 
+        echo json_encode($json_array);
+
+    }
+
+    public function aggregated() {
+        $this->template->plugins->add(['DataTableFileExport','Progress']);
+        $this->template->javascript->add('assets/camlis/js/report/camlis_report.js');
+
+        $obj		= new stdClass();
+        $obj->val = $this->session->userdata["roleid"];
+        $data   = $this->rModel->lookup_perm_report($obj);
+        //$this->data["result_list"]		= $this->rModel->aggregate_table();
+        $this->template->content->widget('CamLISReportNavigation', ['cur_page' => $data]);
+
+
+        $this->template->content->view('template/pages/report/aggregated', $this->data);
+        $this->template->publish();
+    }
+
+    public function individual() {
+
+        $this->template->stylesheet->add('assets/plugins/autocomplete/jquery-ui.css');
+        $this->template->javascript->add('assets/plugins/autocomplete/jquery-ui.js');
+        $this->template->javascript->add('assets/camlis/js/report/camlis_report.js');
+
+        $obj		= new stdClass();
+        $obj->val = $this->session->userdata["roleid"];
+        $data   = $this->rModel->lookup_perm_report($obj);
+        //$this->data["result_list"]		= $this->rModel->aggregate_table();
+        $this->template->content->widget('CamLISReportNavigation', ['cur_page' => $data]);
+
+        $this->template->modal->view('template/modal/modal_patient_sample_preview_result');
+        $this->template->content->view('template/pages/report/individual', $this->data);
+        $this->template->publish();
+    }
+    public function bacteriology() {
+        //
+        $this->data['labo_type']   = $this->rModel->load_labo();
+        $this->data['department']   = $this->rModel->load_dept();
+        $this->data['sample']   = $this->rModel->load_sample();
+        $this->data['test']   = $this->rModel->load_test();
+
+        $obj		= new stdClass();
+        $obj->val = $this->session->userdata["roleid"];
+        $data   = $this->rModel->lookup_perm_report($obj);
+        //$this->data["result_list"]		= $this->rModel->aggregate_table();
+        $this->template->content->widget('CamLISReportNavigation', ['cur_page' => $data]);
+
+        $this->template->stylesheet->add('assets/plugins/autocomplete/jquery-ui.css');
+        $this->template->javascript->add('assets/plugins/autocomplete/jquery-ui.js');
+        $this->template->javascript->add('assets/camlis/js/report/camlis_report.js');
+
+        $this->template->modal->view('template/modal/modal_bacteriology_preview_result');
+        $this->template->content->view('template/pages/report/bacteriology', $this->data);
+        $this->template->publish();
+    }
+
+    public function ward() {
+        //var_dump($this->session->userdata('laboratory')->labID);
+
+        $obj		= new stdClass();
+        $obj->val = $this->session->userdata["roleid"];
+        $data   = $this->rModel->lookup_perm_report($obj);
+        //$this->data["result_list"]		= $this->rModel->aggregate_table();
+        $this->template->content->widget('CamLISReportNavigation', ['cur_page' => $data]);
+
+        $this->template->javascript->add('assets/camlis/js/report/camlis_report.js');
+        $this->template->content->view('template/pages/report/ward', $this->data);
+        $this->template->publish();
+    }
+
+    // format date time Y-m-d
+    function format_date($date){
+        $arr = explode('/',$date);
+        return $arr[2].'-'.$arr[1].'-'.$arr[0];
+
+    }
+
+    /**
+     * View All view_all
+     */
+    public function aggregate_list() {
+        $obj		= new stdClass();
+        $obj->start	= $this->format_date($this->input->post('start'));
+        $obj->end	= $this->format_date($this->input->post('end'));
+
+        $result_list = $this->rModel->aggregate_table($obj);
+
+
+        $grade_name = '';
+        $table_body ='';
+
+        foreach($result_list as $row){
+            if($grade_name != $row["Title"] && $row["Title"]!=''){
+                $table_body.= '<tr style=" height: 30px;"> 
+                                    <td style="font-weight:bold">&nbsp;'.$row["Title"].'</td>  
+                                    <td>'._t('global.male').'</th>
+                                    <td>'._t('global.female').'</th>
+                                    <td>'._t('report.total').'</th>
+                                </tr>';
+            }
+
+            if($row["distribute"]=="Sub total"){
+                $css = 'style="text-align:right; "';
+            }else if($row["distribute"]=="Grand total"){
+                $css = 'style="text-align:right; "';
+            }else{
+                $css = "";
+            }
+
+
+             $table_body.='<tr >  
+                            <td '.$css.'>&nbsp;'.$row["distribute"].'</td> 
+                            <td>&nbsp;'.($row["male"]==''?'':$row["male"]).'</td>
+                            <td>&nbsp;'.($row["female"]==''?'':$row["female"]).'</td>
+                            <td>&nbsp;'.($row["total"]==''?'':$row["total"]).'</td>   
+                        </tr>';
+
+
+            $grade_name = $row["Title"];
+
+        }
+
+        echo  $table_body;
+
+    }
+
+    /**
+     * View All award_list
+     */
+    public function ward_list() {
+        $obj		= new stdClass();
+        $obj->start	= $this->format_date($this->input->post('start'));
+        $obj->end	= $this->format_date($this->input->post('end'));
+
+
+        $result_list = $this->rModel->ward_table($obj);
+
+
+        $grade_name = '';
+        $table_body ='';
+
+        if($result_list){
+            foreach($result_list as $row){
+                if($grade_name != $row["Title"] && $row["Title"]!=''){
+                    $table_body.= '<tr style=" height: 30px;"> 
+                                        <td style="font-weight:bold">&nbsp;'.$row["Title"].'</td>  
+                                        <td>'._t('global.male').'</th>
+                                        <td>'._t('global.female').'</th>
+                                        <td>'._t('report.total').'</th>
+                                    </tr>';
+                }
+
+                if($row["distribute"]=="Sub total"){
+                    $css = 'style="text-align:right; "';
+                }else if($row["distribute"]=="Grand total"){
+                    $css = 'style="text-align:right; "';
+                }else{
+                    $css = "";
+                }
+
+                 $table_body.='<tr >  
+                                <td '.$css.'>&nbsp;'.$row["distribute"].'</td> 
+                                <td>&nbsp;'.($row["male"]==''?'':$row["male"]).'</td>
+                                <td>&nbsp;'.($row["female"]==''?'':$row["female"]).'</td>
+                                <td>&nbsp;'.($row["total"]==''?'':$row["total"]).'</td>   
+                            </tr>';
+
+                $grade_name = $row["Title"];
+
+            }
+        }else{
+            $table_body = "<tr><td align='center'>No data</td></tr>";
+        }
+
+        echo  $table_body;
+    }
+
+    /**
+     * Print result Patient's sample
+     */
+    public function preview_pbacteriology_result($type = 'preview') {
+
+        $obj		= new stdClass();
+        $con = '';
+        //
+        if($this->input->post('_labo_type')!=''){
+            $labid = $this->rModel->normalize_critial($this->input->post('_labo_type'));
+            $con .= 'and stv."labID" in(' . $labid . ')';
+        }
+        //
+        if($this->input->post('_department')!=''){
+            $dept 	= $this->rModel->normalize_critial($this->input->post('_department'));
+            $con .= 'and stv.department_id in(' . $dept . ')';
+        }
+        //
+        if($this->input->post('_sample_type')!=''){
+            $sample_id 	= $this->rModel->normalize_critial($this->input->post('_sample_type'));
+            $con .= 'and ds.sample_id in(' . $sample_id . ')';
+        }
+        //
+        if($this->input->post('_testing')!=''){
+            $testing_id 	= $this->rModel->normalize_critial($this->input->post('_testing'));
+            $con .= 'and stv.test_id in('.$testing_id.')';
+        }
+        //
+        if($this->input->post('_result')!=''){
+            $result_id 	= $this->rModel->normalize_critial($this->input->post('_result'));
+            $con .= 'and pr.result_id in(' . $result_id . ')';
+        }
+        //
+        /*if($this->input->post('_labo_number')!=''){
+            $obj->labo_number = $this->input->post('_labo_number');
+            $con .= "and stv.sample_number = '".$obj->labo_number."'";
+        }*/
+        if($this->input->post('_start')!=''){
+            $_start 	= date('Y-m-d',strtotime(str_replace('/', '-',$this->input->post('_start'))));
+            $con .= 'and date_format(stv.test_date,"%Y-%m-%d")>="'.$_start.'"';
+        }
+        if($this->input->post('_end')!=''){
+            $_end 	= date('Y-m-d',strtotime(str_replace('/', '-',$this->input->post('_end'))));
+            $con .= 'and date_format(stv.test_date,"%Y-%m-%d")<="'.$_end.'"';
+        }
+        
+        // get result list array
+        $result_list   = $this->rModel->load_result($obj,$con);
+
+        // export to excel
+         if($type=='print'){
+             $this->load->library('phptoexcel');
+            // file name
+            $obj->filename = "Bacteriology Report";
+
+            $this->excel = PHPExcel_IOFactory::createReader('Excel2007');
+            $this->excel = $this->excel->load($_SERVER['DOCUMENT_ROOT'].'/assets/report/export_report.xlsx');
+            //activate worksheet number 1
+            $this->excel->setActiveSheetIndex(0);
+            //name the worksheet
+            $this->excel->getActiveSheet()->setTitle($obj->filename);
+
+            // looping
+            $r=1;
+            $i=5;
+
+            //$this->excel->getActiveSheet()->setCellValue('A1', $obj->filename .' for '.$f);
+
+            foreach($result_list as $row){
+                $this->excel->getActiveSheet()->setCellValue('A'.$i, $r); // no
+                $this->excel->getActiveSheet()->setCellValue('B'.$i, $row["lab_code"]); // name_en
+                $this->excel->getActiveSheet()->setCellValue('C'.$i, $row["sample_number"]);  //  sample_number
+                $this->excel->getActiveSheet()->setCellValue('D'.$i, $row["sex"]); // sex
+
+                $this->excel->getActiveSheet()->setCellValue('E'.$i, $row["dob"]); // dob
+                $this->excel->getActiveSheet()->setCellValue('F'.$i, $row["department_name"]); // department_name
+                $this->excel->getActiveSheet()->setCellValue('G'.$i, $row["sample_name"]); // sample_name
+                $this->excel->getActiveSheet()->setCellValue('H'.$i, $row["collected_date"]); // collected_date
+                $this->excel->getActiveSheet()->setCellValue('I'.$i, $row["test_date"]); // test_date
+                $this->excel->getActiveSheet()->setCellValue('J'.$i, $row["test_name"]); // test_name
+                $this->excel->getActiveSheet()->setCellValue('K'.$i, $row["results"]); // results
+//
+
+                $this->excel->getActiveSheet()->setCellValue('L'.$i, $row["Amoxi_Clav"]); // Amoxi_Clav
+                $this->excel->getActiveSheet()->setCellValue('M'.$i, $row["Ceftriaxone"]); // Ceftriaxone
+                $this->excel->getActiveSheet()->setCellValue('N'.$i, $row["Cephalothin"]); // Cephalothin
+                $this->excel->getActiveSheet()->setCellValue('O'.$i, $row["Chloramphenicol"]); // Chloramphenicol
+                $this->excel->getActiveSheet()->setCellValue('P'.$i, $row["Clindamycin"]); // Clindamycin
+                $this->excel->getActiveSheet()->setCellValue('Q'.$i, $row["Cloxacillin"]); // Cloxacillin
+                $this->excel->getActiveSheet()->setCellValue('R'.$i, $row["Erythromycin"]); // Erythromycin
+                $this->excel->getActiveSheet()->setCellValue('S'.$i, $row["Nitrofurantoin"]); // Nitrofurantoin
+                $this->excel->getActiveSheet()->setCellValue('T'.$i, $row["Norfloxacin"]); // Norfloxacin
+                $this->excel->getActiveSheet()->setCellValue('U'.$i, $row["Oxacillin"]); // Oxacillin
+                $this->excel->getActiveSheet()->setCellValue('V'.$i, $row["Penicillin"]); // Penicillin
+                $this->excel->getActiveSheet()->setCellValue('W'.$i, $row["Tetracycline"]); // Tetracycline
+                $this->excel->getActiveSheet()->setCellValue('X'.$i, $row["Trimeth_Sulfa"]); // Trimeth_Sulfa
+                $this->excel->getActiveSheet()->setCellValue('Y'.$i, $row["Vancomycin"]); // Vancomycin
+                $this->excel->getActiveSheet()->setCellValue('Z'.$i, $row["Cefoxitin"]); // Cefoxitin
+                //
+                $this->excel->getActiveSheet()->setCellValue('AA'.$i, $row["Ampicillin"]); // Ampicillin
+                $this->excel->getActiveSheet()->setCellValue('AB'.$i, $row["Amikacin"]); // Amikacin
+                $this->excel->getActiveSheet()->setCellValue('AC'.$i, $row["Azithromycin"]); // Azithromycin
+                $this->excel->getActiveSheet()->setCellValue('AD'.$i, $row["Cefazolin"]); // Cefazolin
+                $this->excel->getActiveSheet()->setCellValue('AE'.$i, $row["Cefepime"]); // Cefepime
+                $this->excel->getActiveSheet()->setCellValue('AF'.$i, $row["Ceftazidime"]); // Ceftazidime
+                $this->excel->getActiveSheet()->setCellValue('AG'.$i, $row["Ceftriaxone_30_GNB"]); // Ceftriaxone_30_GNB
+                $this->excel->getActiveSheet()->setCellValue('AH'.$i, $row["Chloramphenicol_30"]); // Chloramphenicol_30
+                $this->excel->getActiveSheet()->setCellValue('AI'.$i, $row["Ciprofloxacin"]); // Ciprofloxacin
+                $this->excel->getActiveSheet()->setCellValue('AJ'.$i, $row["Fosfomycin"]); // Fosfomycin
+                $this->excel->getActiveSheet()->setCellValue('AK'.$i, $row["Gentamicin"]); // Gentamicin
+                $this->excel->getActiveSheet()->setCellValue('AL'.$i, $row["Imipenem"]); // Imipenem
+                $this->excel->getActiveSheet()->setCellValue('AM'.$i, $row["Levofloxacin"]); // Imipenem
+                $this->excel->getActiveSheet()->setCellValue('AN'.$i, $row["Meropenem"]); // Meropenem
+                $this->excel->getActiveSheet()->setCellValue('AO'.$i, $row["Minocycline"]); // Minocycline
+                $this->excel->getActiveSheet()->setCellValue('AP'.$i, $row["Nalidixic_acid"]); // Nalidixic_acid
+                $this->excel->getActiveSheet()->setCellValue('AQ'.$i, $row["Norfloxacin_10_GNB"]); // Norfloxacin_10_GNB
+                $this->excel->getActiveSheet()->setCellValue('AR'.$i, $row["Trimeth_Sulfa_1_25"]); // Trimeth_Sulfa_1_25
+
+                $this->excel->getActiveSheet()->setCellValue('AS'.$i, $row["result_comment"]); // result_comment
+
+                $r++;
+                $i++;
+
+            }
+
+
+
+
+            $this->excel->setActiveSheetIndex(1);
+            $this->excel->getActiveSheet()->setTitle('Criteria');
+            $this->excel->getActiveSheet()->setCellValue('A1', 'Criteria'); //
+
+            $this->excel->getActiveSheet()->setCellValue('A2', 'Date from'); //
+            $this->excel->getActiveSheet()->setCellValue('B2', '2016-12-01'); //
+
+            $this->excel->getActiveSheet()->setCellValue('A3', 'Date to'); //
+            $this->excel->getActiveSheet()->setCellValue('B3', '2016-12-01'); //
+
+            header('Content-Type: application/vnd.ms-excel');
+            header('Content-Disposition: attachment;filename="'.$obj->filename.'.xlsx"');
+            header('Cache-Control: max-age=0'); //no cache
+
+            ob_end_clean();
+            $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+            $objWriter->save('php://output');
+            exit;
+
+         }
+        $this->data['bact_list'] =   $result_list;
+        $this->load->view('template/print/pbacteriology_result.php', $this->data);
+    }
+
+    /* get patient info
+     * funciton
+     */
+     public function patient_info($param1 = '',$param2 = '',$param3 = ''){
+        $obj			= new stdClass();
+        $obj->filter_val= $this->input->post('filter_val');
+        $obj->type		= $this->input->post('type');
+
+        echo json_encode($this->rModel->get_patient_info($obj));
+
+     }
+
+     /*get sample by department */
+     public function sample_by_dept(){
+        $obj			= new stdClass();
+        $obj->value= $this->input->post('department');
+        $dept_id =  4;//$this->rModel->normalize_critial($obj->value);
+
+         $sql = "select  
+                    ds.id as dept_sam_id,
+                    ds.sample_id,
+                    s.sample_name
+                from camlis_std_department_sample ds
+                inner join camlis_std_sample s on s.\"ID\" = ds.sample_id
+                
+                
+                where ds.department_id in(".$dept_id.")";
+        $result = $this->db->query($sql)->result();
+
+        $json_array = array();
+        foreach ($result as $row){
+            array_push($json_array, $row);
+        }
+        echo json_encode($json_array);
+
+     }
+
+    /*get test by department sample id */
+     public function test_by_dept_sample(){
+        $obj			= new stdClass();
+        $obj->value= $this->input->post('sample_type');
+        $dept_id =  $this->rModel->normalize_critial($obj->value);
+
+         $sql = "select  
+                    s.\"ID\" as sample_test_id,
+                    t.test_name
+                from camlis_std_sample_test s
+                inner join camlis_std_test t on t.\"ID\" = s.test_id
+                
+                
+                where s.department_sample_id in(".$dept_id.")";
+        $result = $this->db->query($sql)->result();
+
+        $json_array = array();
+        foreach ($result as $row){
+            array_push($json_array, $row);
+        }
+        echo json_encode($json_array);
+
+     }
+    /*get test by result by sample test */
+     public function result_by_sample_test(){
+        $obj			= new stdClass();
+         $obj->sample_type= $this->input->post('sample_type');
+         $obj->value= $this->input->post('testing');
+         $samp_test_id = $this->rModel->normalize_critial($obj->value);
+         $samp_id = $this->rModel->normalize_critial($obj->sample_type);
+
+         $sql = "select  
+                    t.\"ID\" as organism_id,
+                    t.organism_name
+                from camlis_std_department_sample ds 
+                inner join camlis_std_sample_test st on st.department_sample_id = ds.\"ID\"
+                inner join camlis_std_test_organism s on s.sample_test_id = st.\"ID\"
+                inner join camlis_std_organism t on t.\"ID\" = s.organism_id 
+                where ds.sample_id in(".$samp_id.") 
+                and st.test_id in(".$samp_test_id.") 
+                ";
+
+        $result = $this->db->query($sql)->result();
+
+        $json_array = array();
+        foreach ($result as $row){
+            array_push($json_array, $row);
+        }
+        echo json_encode($json_array);
+
+     }
+    public function query() {
+        $this->app_language->load('pages/report_data_query');
+        $this->load->model(['gazetteer_model', 'department_model', 'sample_source_model', 'requester_model', 'organism_model', 'antibiotic_model', 'sample_model', 'test_model']);
+
+        $this->data['provinces']      = $this->gazetteer_model->get_province();
+        $this->data['departments']    = $this->department_model->get_std_department();
+        $this->data['samples']        = $this->sample_model->get_std_sample();
+        $this->data['sample_sources'] = $this->sample_source_model->get_lab_sample_source();
+        $this->data['requesters']     = collect($this->requester_model->get_lab_requester(FALSE))->unique('requester_id')->toArray();
+        $this->data['organisms']      = $this->organism_model->get_std_organism();
+        $this->data['antibiotics']    = $this->antibiotic_model->get_std_antibiotic();
+        $this->data['tests']          = $this->test_model->get_std_test();
+        $this->data['sample_descriptions']    = $this->sample_model->get_std_sample_descriptions();
+
+        $this->template->plugins->add(['DataTable', 'DataTableFileExport', 'MomentJS', 'BootstrapDateTimePicker']);
+        $this->template->stylesheet->add('assets/camlis/css/pages/camlis_report_data_query.css');
+        $this->template->stylesheet->add('assets/plugins/select2/css/select2-bootstrap-flat.css');
+        $this->template->javascript->add('assets/camlis/js/report/camlis_data_query.js');
+        $this->template->content->view('template/pages/report/data_query', $this->data);
+        $this->template->content_title = _t('global.query');
+        $this->template->publish();
+    }
+    
+    public function get_raw_data() {
+        $data   = $this->input->post();
+        $result = $this->rModel->get_raw_data($data);
+        echo json_encode($result);
+    }
+
+     function template(){
+        $this->load->model('email_model');
+        $obj		= new stdClass();
+        $obj->patient_id = 22222;
+        $obj->sex = 'Male';
+        $obj->_year = 66;
+        $obj->diseases = 'test';
+        // insert tracking email
+        $this->db->set('mail', json_encode($obj));
+        $this->db->set('date', date('Y-m-d'));
+        $this->db->set('status', TRUE);
+        $this->db->insert('daily_mail');
+        $obj->inscress_id = $this->db->insert_id();
+        echo $this->email_model->email_urgent_test($obj);
+     }
+}
+
+
+

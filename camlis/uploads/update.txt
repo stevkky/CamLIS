@@ -1,0 +1,52 @@
+Ministry of Health in collaboration with World Health Organization (WHO) in Cambodia<p>
+
+Developed Cambodia Laboratory Information System (CamLIS)<p>
+
+Copyright © 2013. All Right Reserved Contact: iengv@who.int<p>
+
+System Updates:<p>
++ 01/03/2019------------------------------------------------------------------------------------<p>
+	- Upgraded CamLIS server to a higher speed and to https (check in invoice).  <br>
+        - Added translation comment in Khmer <br>
+	- Added warning message for Microbiology <br>
+<p>
+
++ 15/02/2019------------------------------------------------------------------------------------<p>
+	- Updated TAT report to extract raw data into excel <br>
+        - Optimized aggregated report and made run faster <br>
+	- Added interpretation to Microbiology results <br>
+	- Added two pathogens into CamLIS (Presumptive Salmonella Typhi, Presumptive Salmonella Paratyphi A)<br>
+<p>
+
+
++ 11/01/2019------------------------------------------------------------------------------------<p>
+	- Updated TAT report to include also Test Name <br>
+        - Optimized Microbiology report and freezed the first 3 top rows <p>
+
++ 18/12/2018------------------------------------------------------------------------------------<p>
+	- Fixed problem with export Microbiology report to excel. User can export long period report like yearly report...etc <br>
+	- Changed test name from : HAV Antibody --> HAV Ab and HAV Antigen --> HAV IgM<p>
++ 11/12/2018------------------------------------------------------------------------------------<p>
+	- Developed module for clinician to request test directly from wards. Lab manager can assign right for clician to do it. <br>
+	- Updated : the New notification icon will disappear when user click on it.It will appear again when there are updates in the system.<P>
+
++ 18/11/2018------------------------------------------------------------------------------------<p>
+	- Query extractor<br>
+		+ Showing Blood volume when selecting sample_description<br>
+		+ Showing Max,Min,Unit when selecting result/organism<br>
+	- Microbiology report: Added contaminant<p>
++ 02/10/2018------------------------------------------------------------------------------------<p>
+	- Update "Approval" functions for laboratory results. Only users that have right can approve laboratory results. Physicians can only view approved laboratory results<br>
+	- Created preview request test button in the "View Sample"page. It has two columns.One can be given to patient<p>
++ 27/09/2018------------------------------------------------------------------------------------<p>
+
+	- Created menu "About CamLIS" and submenus <br>
+	- Included "Diagnosis" in Query Extractor. User need to select Collection Date to display diagnosis.<p>
+  
++ 24/09/2018------------------------------------------------------------------------------------<p>
+
+	- Required field for collection time and diagnosis<br>
+	- Under Microbiology: Required field for Disc diffusion and MIC<br>
+	- Updated HIV testing to comply with National Program (NCHADS)<br>
+	- Updated Malaria testing to comply with National Program (CNM)
+

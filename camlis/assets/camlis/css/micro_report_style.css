@@ -1,0 +1,60 @@
+#toc .toc-title {
+	border-left: 4px solid #f6f6f7;
+	font-size: 1.2em;
+	color: #9b9b9b;
+	padding: 0 0 0.5em 0.8em;
+}
+
+#toc .toc-item a {
+	display: block;
+	border-left: 4px solid #f6f6f7;
+	padding: 0.2em 0 0.2em 1em;
+	color: #000;
+	font-weight: 300;
+	border: 1px solid #ccc;
+}
+
+#toc .toc-item a:hover, #toc .toc-item a.active {
+	/* font-weight: 400; */
+	border-left: 4px solid #348ae2;
+	color: #348ae2;
+}
+
+#toc .toc-item.toc-item-H3 a {
+	padding-left: 2em;
+}
+
+#toc .toc-item.toc-item-H4 a {
+	padding-left: 3em;
+}   
+#sidebar-toc {
+	background: #fff;
+}
+
+#sidebar-toc .sidebar-title {
+	padding: 0.2em 0 0.2em 1em;
+	border-left: 4px solid transparent;
+	font-size: 1.2em;
+	color: #9b9b9b;
+}
+
+#sidebar-toc .sidebar-content {
+	padding: 0.2em 0 0.2em 1em;
+	border-left: 4px solid transparent;
+}
+
+.sticky-top {
+	overflow: auto;
+	-webkit-transition: max-height 500ms ease-in-out;
+	-moz-transition: max-height 500ms ease-in-out;
+	-ms-transition: max-height 500ms ease-in-out;
+	-o-transition: max-height 500ms ease-in-out;
+	transition: max-height 500ms ease-in-out;
+}
+.affix {
+    top:50px;
+    position: fixed;
+   	width: 100%;
+	background-color:white;
+	z-index:777;
+}

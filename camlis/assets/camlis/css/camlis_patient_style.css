@@ -1,0 +1,44 @@
+section {
+    padding-bottom: 100px;
+}
+
+#patient-search-wrapper {
+    margin-bottom: 30px;
+    padding:20px 0 20px;
+    border: 2px solid #d3d3d3;
+}
+#patient-search-wrapper:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+#btn-wrapper {
+    margin-top: 25px;
+}
+
+#modal-merge-patient .border-box {
+    border: 2px solid #d3d3d3;
+    margin-bottom: 30px;
+    min-height: 375px;
+    position: relative;
+    padding: 0;
+}
+#modal-merge-patient .border-box table.patient-list {
+    margin: 0;
+    border: none;
+}
+
+#modal-merge-patient .border-box table.patient-list {
+    border: none;
+}
+#modal-merge-patient .border-box table.patient-list td {
+    border-top: none;
+}
+
+#modal-merge-patient .border-box table.patient-list tr td:first-child {
+    border-left: none;
+}
+
+#modal-merge-patient .border-box table.patient-list tr td:last-child {
+    border-right: none;
+}

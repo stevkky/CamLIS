@@ -1,0 +1,210 @@
+/** Left Menu Style */
+.adm-left-menu {
+    padding-right: 0 !important;
+}
+.list-group {
+    /*box-shadow: 0 2px 5px -3px black;*/
+}
+.list-group .list-group-item {
+    border-radius: 0 !important;
+    border-right: 0;
+    background:rgba(244, 242, 242, 1);
+    transition: background .3s;
+    -moz-transition: background .3s;
+    -webkit-transition: background .3s;
+}
+.list-group .list-group-item:hover {
+    background : white;
+}
+.list-group .list-group-item.selected {
+    background:white;
+    border-left:3px solid rgba(68, 68, 250, 0.71) !important;
+}
+
+.wrapper {
+    padding: 0 15px 0 30px !important;  
+    border-left: 1px solid #dddddd;
+    margin-left: 0;
+    min-height: 270px;
+}
+
+.sub-header {
+    padding-bottom: 8px;
+    border-bottom:1px solid #e0e0e0;
+}
+
+.group-header {
+    padding-top:7px;
+    padding-bottom:7px;
+    margin-top:8px;
+    margin-bottom:8px;
+    font-size:11pt;
+    border-left:5px solid rgba(128, 128, 128, 0.5);
+    background : -webkit-linear-gradient(left, rgba(25, 211, 255, 0.4),white);
+    background : -moz-linear-gradient(left, rgba(25, 211, 255, 0.4),white);
+    background : -o-linear-gradient(left, rgba(25, 211, 255, 0.4),white);
+    background : linear-gradient(left, rgba(25, 211, 255, 0.4),white);
+}
+.filter-box {
+    border: 2px solid #d7d7d7;
+    padding: 12px;
+    margin-bottom: 35px;
+}
+
+/* Details Button on DataTable */
+td.details-control {
+    background: url(../images/details_open.png) no-repeat center;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url(../images/details_close.png) no-repeat center center;
+}
+
+/* Laboratory Page */
+.adm_lab_btnWrapper {
+    margin-bottom : 0 !important;
+    margin-top : 30px !important;
+    padding-top : 10px !important;
+    border-top :1px solid #e2e2e2;
+}
+div.custom-filestyle {
+    position: relative;
+    margin-top: 5px;
+}
+div.custom-filestyle .btn {
+    width:100%;
+    margin-bottom: 5px;
+}
+
+div.custom-filestyle input[type=file] {
+    height: 34px;
+    width: 100%;
+    position: absolute;
+    left:0;
+    top:0;
+    cursor:pointer;
+    opacity: 0;
+}
+
+#lab-icon-view {
+    width:190px;
+    height: 200px;
+}
+
+/** Test Page **/
+div.DTFC_LeftBodyWrapper table, div.DTFC_RightBodyWrapper table {
+    border-top: 1px solid transparent !important;
+}
+div.DTFC_RightBodyWrapper {
+    overflow: visible !important;
+}
+div.DTFC_RightBodyLiner {
+    width : 100% !important;
+    overflow: visible !important;
+}
+
+/* Form */
+#modal-test #tbl-organism-header, #tbl-organism-header th, #tbl-antibiotic-header, #tbl-antibiotic-header th {
+    margin-bottom: 0 !important;
+    border: 2px solid #EFDEDE;
+    border-bottom: 2px solid #eedddd;
+}
+#modal-test #tbl-organism {
+    margin-bottom: 0 !important;
+    border: 0 !important;
+}
+#modal-test #tbl-organism button {
+    padding: 4px 8px !important;
+}
+#modal-test #tbl-organism tbody tr {
+    cursor: pointer;
+}
+#modal-test #tbl-organism tbody td {
+    padding : 7px 7px 5px 5px;
+    font-weight: bold;
+}
+
+#modal-test #tbl-antibiotic {
+    margin-bottom: 0 !important;
+}
+div#antibiotic-wrapper {
+    /*padding: 5px;*/
+    border:2px solid rgba(239, 222, 222, 1);
+    border-top: 0;
+}
+div#organsim-filter-wrapper {
+    padding: 5px 5px 8px;
+    border: 2px solid rgba(239, 222, 222, 1);
+    border-bottom: 1px solid rgba(239, 222, 222, 1);
+    border-top: 0;
+}
+div#antibiotic-filter-wrapper {
+    padding: 5px 5px 8px;
+    border-bottom: 2px solid rgba(239, 222, 222, 1);
+}
+div#organism-list {
+    border:1px solid rgba(239, 222, 222, 1);
+    border-top:0;
+    padding: 0;
+    max-height: 320px;
+    overflow: auto;
+}
+ul#antibiotic-list {
+    margin-top: 8px;
+    max-height: 300px;
+    overflow: auto;
+    padding-top:5px;
+    padding-left: 5px;
+}
+ul#antibiotic-list li {
+    padding-bottom: 3px;
+}
+
+#modal-patient-type .input-group-addon {
+    border:0 !important;
+    padding:0 !important;
+}
+#modal-patient-type .input-group-addon select.form-control{
+    width: 80px !important;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+#select-test-wrapper .input-group-addon,
+#test-entry-wrapper .input-group-addon,
+#select-group-result-wrapper .input-group-addon,
+#group-result-wrapper .input-group-addon {
+    padding:0 8px !important;
+}
+#select-test-wrapper .btn-group .btn,
+#test-entry-wrapper .btn-group .btn,
+#select-group-result-wrapper .btn-group .btn,
+#group-result-wrapper .btn-group .btn {
+    float: none !important;
+    display: inline-block !important;
+    border-radius: 0 !important;
+    padding-left:8px !important;
+    padding-right: 8px !important;
+    margin-left: 1px;
+}
+
+/*** Document Page ***/
+.result-template {
+    padding: 1cm 0.8cm 0.8cm;
+    box-shadow: 0 3px 2px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+.result-template table {
+     width:100%;
+}
+.result-template table td{
+    padding-bottom: 15px;
+}
+.result-template .footer {
+    border-top:1px solid #868686;
+    margin-top:40px;
+    padding-top:10px;
+}
+.result-template .input-group-addon {
+    padding: 3px 10px 3px !important;
+    background: #f8f8f8 !important;
+}

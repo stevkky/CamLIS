@@ -1,0 +1,54 @@
+<?php
+defined('BASEPATH') OR die('Access denied!');
+if (!function_exists('getAge')) {
+	function getAge($dob, $type = 'day') {
+		$tmp = date_diff(date_create(date('Y-m-d')), date_create($dob));
+		$days = $tmp->format("%a");
+
+		$result = 0;
+		switch(strtolower($type)) {
+			case 'month' : 
+				$result = floor($days/30);
+				break;
+			case 'year' :
+				$result = floor($days/365);
+				break;
+			default :
+				$result = $days;
+		}
+		
+		return $result;
+	}
+}
+function getAging($dob)
+{
+    $from = new DateTime($dob);
+    $to = new DateTime('today');
+    return $from->diff($to)->y . _t('global.year').'&nbsp;'. $from->diff($to)->m ._t('global.month').'&nbsp;'.$from->diff($to)->d ._t('global.day');
+
+}
+
+/**
+ * Language Helper
+ */
+if (!function_exists('_t')) {
+	function _t($key, $param = '') {
+		$CI		= & get_instance();
+		$value	= $CI->lang->line(strtolower(trim($key)));
+		
+		if (empty($value) || $value == FALSE) {
+			$value = strtolower($key);
+		}
+		
+		return $value;
+	}
+}
+
+if (!function_exists('isPMRSPatientID')) {
+    function isPMRSPatientID($id)
+    {
+        return preg_match('/^[A-Za-z]{2}\-[0-9]{6}$/', $id) ||
+        preg_match('/^[0-9]{3}\-[0-9]{3}\-[0-9]{3}\-[0-9]{1}$/', $id) ||
+        preg_match('/^[0-9]{3}\-[0-9]{3}\-[0-9]{3}\-[0-9]{1}\-$/', $id) ? true : false;
+    }
+}

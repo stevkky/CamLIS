@@ -1,0 +1,32 @@
+.condition-list .header {
+    background: #2A83D0;
+    color: white;
+    padding: 8px 10px;
+    font-weight: bold;
+}
+.condition-list .content {
+    border-left: 2px solid #e7e7e7;
+    border-right: 2px solid #e7e7e7;
+    min-height: 450px;
+    padding-bottom: 10px;
+}
+.condition-list .footer {
+    border: 2px solid #e7e7e7;
+    padding: 5px;
+    text-align: center;
+    white-space: nowrap;
+}
+.condition-list .footer .btn {
+    width: 49%;
+}
+.condition-list .footer .btn:focus {
+    outline: none;
+}
+
+.condition-list .condition-label {
+    background: #e7e7e7;
+    padding: 8px 10px;
+}
+.condition-list .condition {
+    padding: 5px;
+}

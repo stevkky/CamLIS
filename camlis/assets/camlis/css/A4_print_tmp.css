@@ -1,0 +1,25 @@
+body {
+	background: rgb(204, 204, 204);
+}
+page[size="A4"], page[size="A4"][orientation="portrait"] {
+	background: white;
+	width: 21cm;
+	height: 29.7cm;
+	display: block;
+	margin: 10px auto;
+	box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+page[size="A4"][orientation="landscape"] {
+    width: 29.7cm;
+    height: 21cm;
+}
+@media print {
+	body,
+	page[size="A4"] {
+		margin: 0;
+		box-shadow: none;
+	}
+}

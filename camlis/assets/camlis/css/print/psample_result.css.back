@@ -1,0 +1,293 @@
+@font-face {
+	font-family: 'KhmerOS';
+	src: url('../../fonts/KhmerOS.ttf');
+}
+@font-face {
+	font-family: 'KhmerOS_muollight';
+	src: url('../../fonts/KhmerOS_muollight.ttf');
+}
+
+@font-face {
+	font-family: 'SourceSerifPro-Regular';
+	src: url('../../fonts/SourceSerifPro-Regular.ttf');
+}
+
+body {
+	margin : 0;
+	padding : 0;
+	background:transparent !important;
+	line-height: 1.2;
+	/*line-height: 1.42857143; old*/
+}
+
+.text-left {
+	text-align: left;
+}
+.text-right {
+	text-align: right;
+}
+.text-top {
+	vertical-align: top;
+}
+.text-bottom {
+	vertical-align: bottom;
+}
+.text-middle {
+	vertical-align: middle;
+}
+.text-bold {
+	font-weight: bold;
+}
+.no-wrap {
+	white-space: nowrap;
+}
+page[size=A4] {
+	padding: 1cm !important;
+	font-family: 'SourceSerifPro-Regular', 'serif';
+	font-size: 10pt;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	position: relative;
+}
+
+table {
+	border-collapse: collapse;
+}
+.lost {
+	color:transparent;
+	visibility: hidden;
+}
+
+/* Header */
+
+.result-print-layout div.header {
+	height: 3.8cm;
+	position: relative;
+}
+.result-print-layout .header .logo {
+	position: absolute;
+	left: 0;
+	bottom: 15px;
+}
+.result-print-layout .header .logo img {
+	width: 100px;
+}
+.result-print-layout .header .motto_wrapper {
+	text-align: center;
+	font-weight: bolder !important;
+	word-spacing: 5px;
+}
+.result-print-layout .motto_wrapper .country {
+	font-size: 14pt;
+}
+.result-print-layout .motto_wrapper .motto {
+	font-size: 12pt;
+}
+.result-print-layout .header .title .lab_nameEN {
+	font-size: 11pt !important;
+}
+.result-print-layout .header .title {
+	position: absolute;
+	text-align: center;
+	left: 0;
+	right: 0;
+	bottom: 6px;
+	margin: 0 auto;
+	line-height: 22px;
+}
+.result-print-layout .header .title .lab_nameKH {
+	font-family: 'KhmerOS_muollight', 'serif';
+}
+.result-print-layout .header .title .lab_nameEN {
+	font-weight: bold;
+}
+.result-print-layout .header .title .result_title {
+	font-weight: bolder;
+	font-size: 12pt;
+	line-height: 32px;
+}
+
+/* Patient Info */
+
+.psample_info,
+.sample_info {
+	border: 1px solid #9d9797;
+	margin-top: 5px;
+	padding: 4px;
+}
+.sample_info th {
+	padding-bottom: 5px;
+	white-space: nowrap !important;
+}
+.psample_info:after {
+	content: '';
+	display: block;
+	clear: both;
+}
+.psample_info .section1 {
+	float: left;
+	width: 9.2cm;
+}
+.psample_info .section1 .label-name {
+	width: 2.5cm;
+	word-spacing: 4px !important;
+}
+.psample_info .section1 .label-value {
+	width:6.7cm;
+	padding-left: 5px;
+}
+.psample_info .section2 {
+	float: right;
+	width: 9.5cm;
+}
+.psample_info .section2 .label-name {
+	width:3.8cm;
+	word-spacing: 4px !important;
+}
+.psample_info .section2 .label-value {
+	width:5.7cm;
+	padding-left: 5px;
+	word-spacing: 4px !important;
+}
+
+/* Sample Info */
+
+.sample_info {
+	background: #ededed;
+	margin-bottom: 10px;
+}
+.sample_info table {
+	width: 100%;
+}
+
+/* Sample Result */
+
+div.result table {
+	width: 100%;
+}
+div.result table th {
+	border-bottom: 1px solid #c6c6c6;
+}
+div.result table tbody td {
+	padding: 2px 0;
+}
+ul.result_list {
+	padding: 0;
+	margin: 0;
+	list-style-type: none;
+}
+ul.result_list li {
+	position: relative;
+	padding: 2px;
+}
+div.result table tbody td p.test-name {
+	position: relative;
+	width: 98%;
+	margin: 0;
+}
+div.result table tbody td p.test-name:before,
+ul.result_list > ul li:before {
+	content: '';
+	display: block;
+	position: absolute;
+	bottom: .2rem;
+	width: 98%;
+	height: 0;
+	line-height: 0;
+	border-bottom: 2px dotted black;
+}
+ul.result_list > ul li:before {
+	bottom: .4rem;
+}
+div.result table tbody td p.test-name span,
+ul.result_list > ul li span.name {
+	background: white;
+	z-index: 1;
+	position: relative;
+	padding-right: 5px;
+}
+ul.result_list > ul li span.type {
+	background: white;
+	z-index: 1;
+	right: 0;
+	position: absolute;
+	padding: 0 5px;
+}
+
+.result-print-layout .no-result {
+			padding: 6px 0;
+			text-align: center;
+		}
+		
+.result-print-layout p.value-pair {
+	position: relative;
+	width: 98%;
+	margin: 0;
+}
+
+.result-print-layout p.value-pair:before {
+	content: '';
+	display: block;
+	position: absolute;
+	width: 98%;
+	bottom: .2rem;
+	height: 0;
+	line-height: 0;
+	border-bottom: 2px dotted black;
+}
+
+.result-print-layout p.value-pair .name {
+	background: white;
+	z-index: 1;
+	position: relative;
+	padding-right: 5px;
+}
+
+.result-print-layout p.value-pair .name-result {
+	background: white;
+	z-index: 1;
+	right: 0;
+	position: absolute;
+	padding-left: 5px;
+	font-weight: bold;
+}
+
+/*Note */
+div.note {
+	/*margin-top: 10px;*/
+}
+
+/* Comment */
+ul.comment-list {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+ul.comment-list li:before {
+	content: '- '
+}
+
+/* Signature Block*/
+.signature-block {
+
+}
+
+/* Footer */
+div.report-footer {
+    position: absolute;
+    bottom: 0.8cm;
+    left: 1.2cm;
+    border-top: 1px solid #868686;
+    text-align: center;
+    width: 18.6cm;
+    padding-top: 8px;
+    font-size: 11pt;
+}
+ 
+div.report-footer1 {
+	position: absolute;
+	bottom: 4cm;   
+	font-size: 11pt;
+	width: 90%;
+}

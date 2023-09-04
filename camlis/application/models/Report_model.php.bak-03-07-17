@@ -1,0 +1,863 @@
+<?php
+defined('BASEPATH') OR die('Permission denied.');
+class Report_model extends MY_Model {
+	public function __construct() {
+		parent::__construct(); 
+		$this->load->database(); 
+	}
+	/* vuthy 
+	 * 2016-11-29
+	 * @parame date start and end
+	 */
+	function aggregate_table($obj){
+		 //var_dump( $this->session->userdata('laboratory')->labID);
+		$con=" WHERE DATE_FORMAT(pv.`received_date`,'%Y-%m-%d') >= '".$obj->start."'
+				AND DATE_FORMAT(pv.`received_date`,'%Y-%m-%d') <= '".$obj->end."' ";
+
+		$sql = '	SELECT 	case when name_kh!="" then name_kh when  Title!="" then "Sub total" else "Grand total" end as distribute,
+						Title, 
+						name_kh,
+						SUM(male) AS male,
+						SUM(female) AS female,
+						SUM(total) AS total
+					FROM(
+						SELECT 
+							DISTINCT "1.0. Distribution by province of patient" AS Title,  
+							name_kh,
+							name_en,
+							COUNT(IF(sex= "F",1,null)) AS female,
+							COUNT(IF(sex= "M",1,null)) AS male,
+							SUM(CASE WHEN sex = "F" THEN 1 WHEN sex = "M" THEN 1 ELSE 0 END) AS total
+						FROM (
+						
+							SELECT  
+								pr.name_kh,
+								pr.name_en, 
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM provinces pr 
+							INNER JOIN patient_v p ON pr.code = p.province 
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.' 
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							GROUP BY p.pid,pv.sample_number,pv.`received_date`
+						
+						) AS tbl
+						GROUP BY name_en
+							
+							
+						UNION ALL
+/* aging section */
+						select 
+							"2.0. Distribution by age group" as Title,
+							name_kh, 
+							name_en, 
+							COUNT(IF(sex= "F",1,null)) AS female,
+							COUNT(IF(sex= "M",1,null)) AS male,
+							count(sex) AS total
+							
+						from (
+						
+							SELECT  
+								p.pid,
+								"1: 0 - 29 days" as name_kh,
+								"1: 0 - 29 days" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._day >0 
+							and p._day <= 29
+							and p._month = 0
+							and p._year = 0
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT 
+								p.pid, 
+								"2: 1 - 11 m" as name_kh,
+								"2: 1 - 11 m" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._month >=1 
+							and p._month <= 11 
+							and p._year = 0
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT  
+								p.pid,
+								"3: 1 y - 4 y" as name_kh,
+								"3: 1 y - 4 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p 
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._year >=1 
+							and p._year <= 4
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT 
+								p.pid, 
+								"4: 5 y - 14 y" as name_kh,
+								"4: 5 y - 14 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._year >= 5 
+							and p._year <= 14 
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT 
+								p.pid, 
+								"5: 15 y - 24 y" as name_kh,
+								"5: 15 y - 24 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._year >=15 
+							and p._year <= 24 
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT  
+								p.pid,
+								"6: 25 y - 49 y" as name_kh,
+								"6: 25 y - 49 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._year >=25 
+							and p._year <= 49
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT  
+								p.pid,
+								"7: 50 y - 64 y" as name_kh,
+								"7: 50 y - 64 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and p._year >=50 
+							and p._year <= 64
+							group by pv.patient_id,pv.`received_date`
+							
+							union all
+							
+							SELECT  
+								p.pid,
+								"8: >= 65 y" as name_kh,
+								"8: >= 65 y" as name_en,
+								p.sex,
+								p.patient_name,
+								pv.received_date 
+								
+							FROM patient_v p  
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid 
+							
+							'.$con.'  
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							AND p._year >=65 
+							group by pv.patient_id,pv.`received_date`
+							
+						) as p 
+						group by name_kh 
+/* end aging */ 
+						
+						UNION ALL
+						SELECT 
+                            Title,
+                            name_kh,
+                            name_en,
+                            COUNT(IF(sex= "F",1,null)) AS female,
+	                        COUNT(IF(sex= "M",1,null)) AS male,
+                            COUNT(total) as total
+                        FROM (
+                            SELECT 
+                                "3.0. Distribution by Sample Source" as Title,
+                                ss.source_name  as name_kh, 
+                                ss.source_name  as name_en, 
+                                p.sex,
+                                COUNT(p.sex) AS total
+                                
+                            from patient_v p 
+                            inner join camlis_patient_sample pv on pv.patient_id= p.pid  and pv.status=1
+                            inner join camlis_lab_sample_source ss on ss.ID = pv.sample_source_id
+                            '.$con.' 
+                            and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+                            group by ss.source_name,p.pid,pv.sample_number
+						) dis3
+                        group by name_en
+						
+						UNION ALL
+						
+/* 4.0. Distribution by Sample status */						
+						select 
+							"4.0. Distribution by Sample status" as Title,
+							 name_kh, 
+							 name_en, 
+							 sum(female) as female,
+							 sum(male) as male,
+							 sum(total) as total
+							
+						from (
+							select 
+								"Paid Patient" as name_kh, 
+								"Paid Patient" as name_en,
+								count(if(p.sex = "M",1,null)) as male,
+								count(if(p.sex = "F",1,null)) as female ,
+								count(p.sex) as total 
+							
+							from patient_v p
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid
+							'.$con.'
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and pv.payment_needed = 1
+							
+							UNION ALL
+							
+							select 
+								"Research Sample" as name_kh, 
+								"Research Sample" as name_en,
+								count(if(p.sex = "M",1,null)) as male,
+								count(if(p.sex = "F",1,null)) as female ,
+								count(p.sex) as total 
+							
+							from patient_v p
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid
+							'.$con.'
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and pv.for_research = 1 
+							
+							UNION ALL
+							
+							select 
+								"Reject Sample" as name_kh, 
+								"Reject Sample" as name_en,
+								count(if(p.sex = "M",1,null)) as male,
+								count(if(p.sex = "F",1,null)) as female ,
+								count(p.sex) as total 
+							
+							from patient_v p
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid
+							'.$con.'
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and pv.is_rejected = 1 
+							
+							UNION ALL
+							
+							select 
+								"Urgent" as name_kh, 
+								"Urgent" as name_en,
+								count(if(p.sex = "M",1,null)) as male,
+								count(if(p.sex = "F",1,null)) as female ,
+								count(p.sex) as total 
+							
+							from patient_v p
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid
+							'.$con.'
+							
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+							and pv.is_urgent = 1
+						) as pv 
+						group by name_kh
+						
+						UNION ALL   
+						
+						select 
+							"5.0. Distirubtion by Sample Type" AS Title,
+							sample_name as name_kh,
+							"" as name_en,
+							count(if(sex="F",1,Null)) as female,
+							count(if(sex="M",1,Null)) as male,
+							count(sex) as total 
+						from(
+							select 
+								p.sex,
+								ss.sample_name,
+								p.patient_name,
+								psd.department_sample_id
+							from patient_v p
+							inner join camlis_patient_sample pv on pv.patient_id = p.pid and p.status = TRUE
+							inner join camlis_patient_sample_detail psd on psd.patient_sample_id = pv.ID 
+							inner join camlis_std_department_sample sds on sds.ID = psd.department_sample_id
+							
+							inner join camlis_std_sample ss on ss.ID = sds.sample_id
+							  
+							'.$con.'
+							and pv.labID = "'.$this->session->userdata('laboratory')->labID.'" 
+						) v
+						group by patient_name,name_kh,department_sample_id
+						  
+						
+						UNION ALL
+					  
+						
+						select 
+							concat("6.0. Distribution by "," ",d.department_name) as Title, 
+							sst.group_result as name_kh,
+							"" as name_en,
+							count(if(p.sex="F",1,Null)) as female,
+							count(if(p.sex="M",1,Null)) as male,
+							count(p.sex) as total 
+							 
+						
+						from  patient_v p
+						inner join camlis_patient_sample pv on pv.patient_id = p.pid
+						inner join camlis_patient_sample_tests pst on pst.patient_sample_id = pv.ID and pst.status = TRUE
+						inner join camlis_std_sample_test sst on sst.ID = pst.sample_test_id 
+						inner join camlis_std_test st on st.ID = sst.test_id 
+						inner join camlis_std_department_sample ds on ds.ID= sst.department_sample_id 
+						inner join camlis_std_department d on d.ID = ds.department_id
+	  
+						'.$con.'
+						and pv.labID = "'.$this->session->userdata('laboratory')->labID.'"
+						and sst.group_result is not null
+						group by d.department_name,sst.group_result
+
+					)AS atbl
+					
+					GROUP BY Title,name_kh WITH ROLLUP';
+					//"'.$this->session->userdata('laboratory')->labID.'"
+				
+				
+			$result=$this->db->query($sql)->result_array(); 
+            return $result;
+				
+				
+	}
+	
+	/* this function using for get patient base the sample source count gender
+	 * @parameters date start and date end
+	 * group by sample source name and test name
+	 * roll up the fields
+	 */
+	function ward_table($obj){ 
+		
+		$sql = 'SELECT 	case when name_kh!="" then name_kh when  Title!="" then "Sub total" else "Grand total" end as distribute,
+						Title, 
+						name_kh,
+						SUM(male) AS male,
+						SUM(female) AS female,
+						SUM(total) AS total
+					FROM(
+						select 
+							concat("Distribution by "," ",source_name) as Title, 
+							group_result as name_kh,
+							"" as name_en,
+							count(if(sex="F",1,Null)) as female,
+							count(if(sex="M",1,Null)) as male,
+							count(sex) as total 
+						from ( 
+								select 
+									p.pid,
+									p.patient_name,
+									p.sex,
+									ss.source_name,
+									t.test_name,
+									ps.received_date,
+									group_result
+									 
+								from patient_v p
+								inner join camlis_patient_sample ps on ps.patient_id = p.pid 
+								inner join camlis_lab_sample_source ss on ss.ID = ps.sample_source_id
+								inner join camlis_patient_sample_tests pst on pst.patient_sample_id = ps.ID and pst.status = TRUE
+								inner join camlis_std_sample_test st on st.ID = pst.sample_test_id
+								inner join camlis_std_test t on t.ID = st.test_id
+								
+								where ps.labID = "'.$this->session->userdata('laboratory')->labID.'"
+								
+								and date_format(ps.received_date,"%Y-%m-%d") >= ?
+								and date_format(ps.received_date,"%Y-%m-%d") <= ? 
+								and st.group_result is not null
+								
+						) as v
+						group by source_name,group_result
+
+					)AS atbl
+					
+					GROUP BY Title,name_kh WITH ROLLUP';
+				
+				
+			$result=$this->db->query($sql,array($obj->start,$obj->end))->result_array();
+			return $result;
+			
+				
+	}
+	function aggregate_sql_short($data){ 
+	
+		$table		= 'patients';
+		$primaryKey	= 'pid'; 
+		$columns	= array(
+							array(
+								'db'		=> '`ppt`.pid as code', 
+								'dt'		=> 'code',
+								'field'		=> 'code' 
+							),
+							array(
+								'db'		=> '`pp`.name_kh',
+								'dt'		=> 'name_kh',
+								'field'		=> 'name_kh'
+							),
+							array(
+								'db'		=> '`pp`.name_en',
+								'dt'		=> 'name_en',
+								'field'		=> 'name_en'
+							),array(
+								'db'		=> 'COUNT(CASE WHEN `ppt`.sex = "M" THEN 1 END)', 'as'=> 'male',   
+								'dt'		=> 'male',
+								'field'		=> 'male' 
+							),array(
+								'db'		=> 'COUNT(CASE WHEN `ppt`.sex = "F" THEN 1 END)', 'as'=> 'female',
+								'dt'		=> 'female',
+								'field'		=> 'female' 
+							),array(
+								'db'		=> 'sum(CASE WHEN `ppt`.sex = "F" THEN 1 WHEN `ppt`.sex = "M" THEN 1 ELSE 0 END)', 'as'=> 'total',
+								'dt'		=> 'total',
+								'field'		=> 'total' 
+							)
+						);
+		
+		
+		$joinQuery	= " FROM `provinces` `pp`
+						INNER  `patients` `ppt` ON `ppt`.`province` = `pp`.`code` 
+					
+					";
+		
+		
+		//			
+		$dstart = DateTime::createFromFormat('d/m/Y', $data->reqData['start']==''?date('d/m/Y'):$data->reqData['start']);
+		$dend = DateTime::createFromFormat('d/m/Y', $data->reqData['end']==''?date('d/m/Y'):$data->reqData['end']);
+ 
+		// where condition						
+		$extraWhere	= " 
+						`ppt`.status = TRUE
+						and date_format(`ppt`.entrydate,'%Y-%m-%d') >= '".$dstart->format('Y-m-d')."'
+						and date_format(`ppt`.entrydate,'%Y-%m-%d') <= '".$dend->format('Y-m-d')."'
+					";
+		// group by
+		$groupBy =  " `ppt`.province ";
+		 
+		//echo date('Y-m-d',strtotime($data->reqData['start']));
+		//$data->reqData['end'];
+		  
+		
+		//config
+		
+		$db_config		= $this->load->database('pmrs', TRUE); 
+		$sql_details	= array(
+			'user'	=> $db_config->username,
+			'pass'	=> $db_config->password,
+			'port'	=> $db_config->port,
+			'db'	=> $db_config->database,
+			'host'	=> $db_config->hostname
+		);
+		
+		$this->load->library('DataTable');
+		$result = DataTable::simple( $data->reqData, $sql_details, $table, $primaryKey, $columns, $joinQuery, $extraWhere,$groupBy);
+		
+		for ($i=0; $i < count($result['data']); $i++) {
+			$result['data'][$i]['number'] = $i + 1;
+		}
+		
+		return $result;
+		  
+	}
+	/**
+	 * Get Sample for view_all using Datatable
+	 */
+	public function aggregate_sql($data) { 
+		
+		$table		= 'province_patient_v';
+		$primaryKey	= 'pid'; 
+		$columns	= array(
+							array(
+								'db'		=> '`ppt`.pid as code', 
+								'dt'		=> 'code',
+								'field'		=> 'code' 
+							),
+							array(
+								'db'		=> '`ppt`.name_kh',
+								'dt'		=> 'name_kh',
+								'field'		=> 'name_kh'
+							),
+							array(
+								'db'		=> '`ppt`.name_en',
+								'dt'		=> 'name_en',
+								'field'		=> 'name_en'
+							),array(
+								'db'		=> 'COUNT(CASE WHEN `ppt`.sex = "M" THEN 1 END)', 'as'=> 'male',   
+								'dt'		=> 'male',
+								'field'		=> 'male' 
+							),array(
+								'db'		=> 'COUNT(CASE WHEN `ppt`.sex = "F" THEN 1 END)', 'as'=> 'female',
+								'dt'		=> 'female',
+								'field'		=> 'female' 
+							),array(
+								'db'		=> 'sum(CASE WHEN `ppt`.sex = "F" THEN 1 WHEN `ppt`.sex = "M" THEN 1 ELSE 0 END)', 'as'=> 'total',
+								'dt'		=> 'total',
+								'field'		=> 'total' 
+							)
+						);
+		
+		
+		$joinQuery	= " FROM province_patient_v as ppt ";
+		
+		
+		//			
+		$dstart = DateTime::createFromFormat('d/m/Y', $data->reqData['start']==''?date('d/m/Y'):$data->reqData['start']);
+		$dend = DateTime::createFromFormat('d/m/Y', $data->reqData['end']==''?date('d/m/Y'):$data->reqData['end']);
+ 
+		// where condition						
+		$extraWhere	= " 
+						`ppt`.status = TRUE
+						and date_format(`ppt`.entrydate,'%Y-%m-%d') >= '".$dstart->format('Y-m-d')."'
+						and date_format(`ppt`.entrydate,'%Y-%m-%d') <= '".$dend->format('Y-m-d')."'
+						
+						group by `ppt`.name_kh with rollup
+					";
+		// group by
+		//$groupBy =  " `ppt`.name_kh with rollup";
+		 
+		//echo date('Y-m-d',strtotime($data->reqData['start']));
+		//$data->reqData['end'];
+		  
+		
+		//config
+		
+		$db_config		= $this->load->database('default', TRUE); 
+		$sql_details	= array(
+			'user'	=> $db_config->username,
+			'pass'	=> $db_config->password,
+			'port'	=> $db_config->port,
+			'db'	=> $db_config->database,
+			'host'	=> $db_config->hostname
+		);
+		
+		$this->load->library('DataTable');
+		$result = DataTable::simple( $data->reqData, $sql_details, $table, $primaryKey, $columns, $joinQuery, $extraWhere);
+		
+		for ($i=0; $i < count($result['data']); $i++) {
+			$result['data'][$i]['number'] = $i + 1;
+		}
+		
+		return $result;
+	}
+	
+	// 
+	function load_labo(){
+		$sql = " select * from camlis_laboratory ";
+		$result=$this->db->query($sql)->result_array();
+        return $result;
+	}
+	// 
+	function load_dept(){
+		$sql = " select * from camlis_std_department ";
+		$result=$this->db->query($sql)->result_array();
+        return $result;
+	}
+	// 
+	function load_sample(){
+		$sql = "select 
+                    ss.* 
+                from camlis_std_sample ss
+                inner join camlis_std_department_sample ds on ds.sample_id = ss.id
+                inner join camlis_std_sample_test st on st.department_sample_id = ds.\"ID\" and test_id = 170
+                ";
+		$result=$this->db->query($sql)->result_array();
+        return $result;
+	}
+	// 
+	function load_test(){
+		$sql = " select * from camlis_std_test ";
+		$result=$this->db->query($sql)->result_array();
+        return $result;
+	}
+	// 
+	function load_result($obj,$con){
+		$sql = " 
+                 select 
+                    labID,
+                    laboname,
+                    lab_code,
+                    sample_number,
+                    sex,
+                    dob,
+                    department_name, 
+                    sample_name,collected_date, 
+                    test_date,
+                    test_name,
+                    results,
+                    antibiotic_name,
+                    result_comment,
+                    /*-- Positive --*/
+                    max(if(antibiotic_id=2,sensitivity,'')) as Amoxi_Clav,
+                    max(if(antibiotic_id=10,sensitivity,'')) as Ceftriaxone,
+                    max(if(antibiotic_id=12,sensitivity,'')) as Cephalothin,
+                    max(if(antibiotic_id=13,sensitivity,'')) as Chloramphenicol,
+                    max(if(antibiotic_id=15,sensitivity,'')) as Clindamycin,
+                    max(if(antibiotic_id=16,sensitivity,'')) as Cloxacillin,
+                    max(if(antibiotic_id=17,sensitivity,'')) as Erythromycin,
+                    max(if(antibiotic_id=27,sensitivity,'')) as Nitrofurantoin,
+                    max(if(antibiotic_id=28,sensitivity,'')) as Norfloxacin,
+                    max(if(antibiotic_id=29,sensitivity,'')) as Oxacillin,
+                    max(if(antibiotic_id=31,sensitivity,'')) as Penicillin,
+                    max(if(antibiotic_id=32,sensitivity,'')) as Tetracycline,
+                    max(if(antibiotic_id=33,sensitivity,'')) as Trimeth_Sulfa,
+                    max(if(antibiotic_id=34,sensitivity,'')) as Vancomycin,
+                    max(if(antibiotic_id='NA',sensitivity,'')) as Cefoxitin,
+                    
+                    /* negative */
+                    max(if(antibiotic_id=4,sensitivity,'')) as Ampicillin,
+                    max(if(antibiotic_id=1,sensitivity,'')) as Amikacin,
+                    max(if(antibiotic_id=5,sensitivity,'')) as Azithromycin,
+                    max(if(antibiotic_id=6,sensitivity,'')) as Cefazolin,
+                    max(if(antibiotic_id=7,sensitivity,'')) as Cefepime,
+                    max(if(antibiotic_id=9,sensitivity,'')) as Ceftazidime,
+                    
+                    max(if(antibiotic_id='NA',sensitivity,'')) as Ceftriaxone_30_GNB,
+                    max(if(antibiotic_id='NA',sensitivity,'')) as Chloramphenicol_30,
+                    max(if(antibiotic_id=14,sensitivity,'')) as Ciprofloxacin,
+                    max(if(antibiotic_id=19,sensitivity,'')) as Fosfomycin,
+                    max(if(antibiotic_id=20,sensitivity,'')) as Gentamicin,
+                    max(if(antibiotic_id=21,sensitivity,'')) as Imipenem,
+                    max(if(antibiotic_id=22,sensitivity,'')) as Levofloxacin,
+                    max(if(antibiotic_id=23,sensitivity,'')) as Meropenem,
+                    max(if(antibiotic_id=25,sensitivity,'')) as Minocycline,
+                    max(if(antibiotic_id=26,sensitivity,'')) as Nalidixic_acid,
+                    
+                    max(if(antibiotic_id='NA',sensitivity,'')) as Norfloxacin_10_GNB,
+                    max(if(antibiotic_id='NA',sensitivity,'')) as Trimeth_Sulfa_1_25  
+                     
+                
+                from( select  
+                        stv.labID,
+                        l.name_en as laboname,
+                        l.name_kh,
+                        l.lab_code,
+                        stv.sample_number,
+                        stv.sex,
+                        stv.dob,
+                        stv.department_name, 
+                        s.sample_name, 
+                        date_format(stv.test_date,'%d-%m-%Y') as test_date,
+                        stv.test_name,
+                        if(pr.`type`=0,pr.result,organism_name) as results,
+                        pr.quantity,  
+                        date_format(stv.collected_date,'%d-%m-%Y') as collected_date,
+                        
+                        pr.antibiotic_id,
+                        an.antibiotic_name, 
+                        (case when `pr`.`sensitivity`=1 then 'S' 
+                              when `pr`.`sensitivity`= 2 then 'R' else 'I' end) as sensitivity, 
+                        stv.result_comment
+                        
+                        
+                    from  camlis_laboratory l  
+                    inner join patient_sample_test_v stv on stv.labID = l.labID
+                    inner join camlis_std_department_sample ds on ds.ID = stv.department_sample_id 
+                    inner join camlis_std_sample s on s.ID = ds.sample_id
+                    inner join result_test_organism_v pr on pr.patient_test_id = stv.patient_sample_test_id
+                    inner join camlis_std_antibiotic an on an.ID = pr.antibiotic_id
+                    where l.status = TRUE
+                    ".$con."   
+				) as r  
+                group by labID,
+                    laboname,
+                    sample_number,
+                    sex,
+                    dob,
+                    department_name, 
+                    sample_name, 
+                    test_date,
+                    test_name,
+                    results 
+                order by sample_number desc  
+			";
+
+		$result=$this->db->query($sql)->result_array();
+        return $result;
+	}
+
+	//
+	function lookup_sample_code($obj){
+		$sql = " select * from camlis_patient_sample 
+            where sample_number like ? 
+            and labID = ?
+            and status = TRUE limit 25
+            ";
+		$result=$this->db->query($sql,array('%'.$obj->val.'%',$this->laboratory_id))->result();
+        return $result;
+	}
+	// 
+	function lookup_patient_id($obj){
+		$sql = "  
+				select 
+					ps.sample_number,
+					pid, 
+					patient_name 
+				from patient_v p
+				inner join camlis_patient_sample ps on ps.patient_id = p.pid
+				where pid like ?
+				 and ps.labID = ?
+				and ps.status = TRUE
+				limit 25
+				
+		";
+		$result=$this->db->query($sql,array($obj->val.'%',$this->laboratory_id))->result();
+        return $result;
+	}
+	// 
+	function lookup_patient_name($obj){
+		$sql = "  select 
+					ps.sample_number, 
+					pid, 
+					patient_name 
+				from patient_v p
+				inner join camlis_patient_sample ps on ps.patient_id = p.pid
+				where patient_name like ? 
+				and ps.labID=?
+				and ps.status = TRUE
+				limit 25 ";
+		$result=$this->db->query($sql,array($obj->val.'%',$this->laboratory_id))->result();
+        return $result;
+	}
+	// 
+	function lookup_labo_number($obj){
+		$sql = "  select * from  camlis_patient_sample where sample_number like ? ";
+		$result=$this->db->query($sql,array($obj->val.'%'))->result();
+        return $result;
+	}
+	//
+	function get_patient_info($obj){
+		  
+		// checking
+		/*if($obj->type==1){  // patient id
+			$sql = "  select * from patient_v where PID = ? ";
+		}else if($obj->type==2){ // patient name
+			$sql = "  select * from patient_v where patient_name = ? ";
+		}else if($obj->type==3){ // patinent sample code*/
+			$sql = "  select 
+							* 
+                    from v_camlis_all_patients p
+                    inner join camlis_patient_sample ps on ps.patient_id = p.pid
+                    where ps.sample_number = ? 
+                    and p.lab_id =?
+                    group by p.patient_id";
+			
+		//}
+		
+		// return list 
+        return $this->db->query($sql,array($obj->filter_val,$this->laboratory_id))->result();
+	}
+	
+	function normalize_critial($criteria){
+		$_val = "";
+		$sep = ','; 
+		$i=0;
+		if(count($criteria)>0){
+			for($i=0; $i< count($criteria); $i++){
+				$_val.= ($i==0?0:$sep)."".$criteria[$i]."";
+				 
+			}  
+		}
+		return $_val;
+	}
+	
+	// get all permission report
+	function lookup_perm_report($obj){
+		$sql = "  select 
+					pr.* 
+				from permission_report_user pru
+				inner join permission_report pr on pr.id = pru.perm_report_id
+				where pru.user_id=?"; 
+		// return list 
+        return $this->db->query($sql,array($obj->val))->result();
+	}
+	
+	//get report inner report
+	public function get_report_name($obj) {
+		 $sql = "select 
+					pr.id,
+					pr.report_name,
+					pr.url, 
+				   COALESCE(pru.user_id,0) as is_assign
+					
+				from permission_report pr 
+				inner join permission_report_user pru on pru.perm_report_id = pr.id and user_id = ?";
+
+		$query = $this->db->query($sql,array($obj->user_id));
+		return $query->result();
+	}
+
+	public  function getSampleNumber($obj){
+        $sql = "select 
+                    p.pid,
+                    p.patient_id,
+                    p.patient_name,
+                    ps.sample_number
+                from v_camlis_all_patients p
+                inner join camlis_patient_sample ps on ps.patient_id = p.pid
+                where p.lab_id = ?
+                order by ps.sample_number;";
+
+        $query = $this->db->query($sql,array($this->laboratory_id));
+        return $query->result();
+    }
+
+
+	
+}

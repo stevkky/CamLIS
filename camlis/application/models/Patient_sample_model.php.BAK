@@ -1,0 +1,645 @@
+<?php
+defined('BASEPATH') OR die("Access denined!");
+class Patient_sample_model extends MY_Model {
+	public function __construct() {
+		parent::__construct();
+		$this->load->library('DataTable');
+	}
+
+    /**
+     * Get Patient's Sample
+     * @param bool $condition
+     * @param bool $patient_id
+     * @param bool $patient_sample_id
+     * @return mixed
+     */
+	public function get_patient_sample($condition = FALSE, $patient_id = FALSE, $patient_sample_id = FALSE) {
+		$this->db->select('
+			psample.ID AS patient_sample_id,
+			psample.patient_id,
+			psample.sample_number,
+			psample.sample_source_id,
+			source.source_name AS sample_source_name,
+			psample.requester_id,
+			requester.requester_name,
+			psample.collected_date,
+			psample.collected_time,
+			psample.received_date,
+			psample.received_time,
+			psample.is_urgent,
+			psample.payment_needed,
+			psample.for_research,
+			psample.clinical_history,
+			psample.is_rejected,
+			psample.reject_comment,
+			psample.result_comment,
+			psample.is_printed,
+			psample.printedBy,
+			psample.printedDate,
+			MAX(result.test_date) AS test_date
+		');
+		$this->db->from('camlis_patient_sample AS psample');
+		$this->db->join('camlis_lab_sample_source AS source', 'psample.sample_source_id = source.ID', 'inner');
+		$this->db->join('camlis_lab_requester AS requester', 'requester.ID = psample.requester_id', 'inner');
+		$this->db->join('camlis_ptest_result AS result', 'psample.ID = result.patient_sample_id AND result.status = TRUE', 'left');
+        $this->db->where('psample.status', 1);
+        $this->db->where('source.status', 1);
+        if ($condition) $this->db->where($condition);
+        if ($patient_id) $this->db->where('psample.patient_id', $patient_id);
+		if ($patient_sample_id) $this->db->where('psample.ID', $patient_sample_id);
+		$this->db->group_by('psample.ID');
+
+		return $this->db->get()->result_array();
+	}
+
+	/**
+	 * Get patient's sample number
+	 */
+	public function get_psample_number() {
+		$this->db->select("CONCAT(REPEAT('0', 4 - LENGTH(COUNT(*) + 1)), COUNT(*) + 1, '-', DATE_FORMAT('".$this->timestamp."','%d%m%Y')) AS sample_number");
+		$this->db->where('labID', $this->laboratory_id);
+		$this->db->where('DATE(entryDate)', "DATE('".$this->timestamp."')", FALSE);
+		$this->db->limit(1);
+		$query = $this->db->get("camlis_patient_sample");
+
+		if ($query) return $query->row();
+		return FALSE;
+	}
+
+	/**
+	 * Add Patient's Sample
+	 * @param $data
+     * @return mixed
+	 */
+	public function add_patient_sample($data) {
+        if($this->session->userdata('laboratory')->sample_number==2) {
+           $obj =  new stdClass;
+           $obj->sample_number = $data["sample_number"].'-'.date('dmY');
+            $result = $obj;
+        }else {
+            $result = $this->get_psample_number();
+        }
+
+		if (!$result || !isset($result->sample_number) || (isset($result->sample_number) && empty($result->sample_number))) return 0;
+
+		$this->db->set($data);
+		$this->db->set('sample_number', $result->sample_number);
+		$this->db->set('labID', $this->laboratory_id);
+		$this->db->set('entryBy', $this->user_id);
+		$this->db->set('entryDate', $this->timestamp);
+		$this->db->insert('camlis_patient_sample');
+
+		return $this->db->insert_id();
+	}
+
+	/**
+	 * Update Patient's Sample
+	 * @param $data
+	 * @return mixed
+	 */
+	public function update_patient_sample($psample_id, $data) {
+		$this->db->set($data);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('ID', $psample_id);
+		$this->db->update('camlis_patient_sample');
+
+		return $this->db->affected_rows();
+	}
+
+    /**
+     * Update Progress status
+     * @param $patient_sample_id
+     * @return bool
+     */
+	public function update_progress_status($patient_sample_id) {
+        $sql = "UPDATE camlis_patient_sample AS psample
+                INNER JOIN (
+                    SELECT ptest.patient_sample_id, COUNT(ptest.ID) AS test_count, COUNT(presult.ID) AS result_count
+                    FROM camlis_patient_sample_tests AS ptest
+                    INNER JOIN camlis_patient_sample AS psample ON ptest.patient_sample_id = psample.ID
+                    INNER JOIN camlis_std_sample_test AS stest ON ptest.sample_test_id = stest.ID
+                    LEFT JOIN camlis_ptest_result AS presult ON presult.patient_test_id = ptest.ID AND presult.status = TRUE
+                    WHERE ptest.status = TRUE
+                          AND ptest.is_rejected = 0
+                          AND psample.status = TRUE
+                          AND stest.is_heading = 0
+                          AND psample.ID = ?
+                    GROUP BY psample.ID
+                ) _t ON psample.ID = _t.patient_sample_id
+                SET psample.progress_status = (CASE
+                        WHEN _t.result_count = 0 THEN 1
+                        WHEN _t.test_count > _t.result_count THEN 2
+                        WHEN _t.test_count = _t.result_count THEN 3
+                     END)
+                WHERE psample.status = TRUE AND psample.\"labID\" = ?";
+        $this->db->query($sql, [$patient_sample_id, $this->laboratory_id]);
+
+        return $this->db->affected_rows() > 0 ? TRUE : FALSE;
+    }
+
+    /**
+     * create new comment by result
+     * @param $psample_id,$data
+     * @return mixed
+     */
+    public function create_result_comment($psample_id, $data) {
+        // insert new comments
+        $this->db->insert('result_comment',$data);
+        return $this->db->affected_rows();
+    }
+    /**
+     * delete result comment
+     * @param $psample_id,$data
+     * @return mixed
+     */
+    public function delete_result_comment($psample_id) {
+        // delete old comment
+        $this->db->where('patient_sample_id', $psample_id);
+        $this->db->delete('result_comment');
+    }
+	/**
+	 * Delete patient's sample
+	 * @param $psample_id
+	 * @return bool
+	 */
+	public function delete_patient_sample($psample_id) {
+		if ((int)$psample_id <= 0) return false;
+		$this->db->trans_start();
+		//delete patient's sample
+		$this->db->set('status', FALSE);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('ID', $psample_id);
+		$this->db->update('camlis_patient_sample');
+
+		//delete patient's sample detail
+		$this->db->set('status', FALSE);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('patient_sample_id', $psample_id);
+		$this->db->update('camlis_patient_sample_detail');
+
+		//delete patient's sample tests
+		$this->db->set('status', FALSE);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('patient_sample_id', $psample_id);
+		$this->db->update('camlis_patient_sample_tests');
+
+		//delete patient's sample result
+		$sql = "UPDATE camlis_ptest_result_antibiotic AS r_antibiotic
+				INNER JOIN camlis_ptest_result AS presult ON r_antibiotic.presult_id = presult.ID 
+				SET r_antibiotic.status = FALSE,
+					r_antibiotic.modifiedBy = ?,
+					r_antibiotic.modifiedDate = ?
+				WHERE presult.status = TRUE
+					  AND r_antibiotic.status = TRUE
+					  AND presult.patient_sample_id = ?";
+		$this->db->query($sql, array($this->user_id, $this->timestamp, $psample_id));
+
+		//delete patient's sample result
+		$this->db->set('status', FALSE);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('patient_sample_id', $psample_id);
+		$this->db->update('camlis_ptest_result');
+		$this->db->trans_complete();
+
+		if ($this->db->trans_status() === TRUE) return 1;
+
+		return 0;
+	}
+
+    /**
+     * Get User who works on current sample
+     * @param $patient_sample_id
+     * @return mixed
+     */
+	public function get_patient_sample_user($patient_sample_id) {
+        $this->db->select('
+            GROUP_CONCAT(DISTINCT `s_user`.fullname ORDER BY `r_user`.fullname SEPARATOR \', \') AS sample_entry_user,
+            GROUP_CONCAT(DISTINCT `r_user`.fullname ORDER BY `r_user`.fullname SEPARATOR \', \') AS result_entry_user,
+			`psample`.entryDate, 
+			(select fullname from `camlis_aauth_users` where `id` =`psample`.`modifiedBy`) modifiedBy,
+			`psample`.modifiedDate
+			
+        ');
+        $this->db->from('camlis_patient_sample AS psample');
+        $this->db->join('camlis_aauth_users AS s_user', 'psample.entryBy = s_user.id', 'inner');
+        $this->db->join('camlis_ptest_result AS presult', 'psample.ID = presult.patient_sample_id AND psample.status = TRUE', 'left');
+        $this->db->join('camlis_aauth_users AS r_user', 'presult.entryBy = r_user.id', 'left');
+        $this->db->where('psample.status', 1);
+        $this->db->where('psample.ID', $patient_sample_id);
+        return $this->db->get()->row_array();
+    }
+
+	/**
+	 * Get Tests of Patient's sample
+	 * @param $psample_id
+	 * @param bool $get_heirarchy
+	 * @param number $parent
+	 * @return array Result
+	 */
+	public function get_patient_sample_test($psample_id, $get_heirarchy = FALSE, $parent = 0,$dep_opt_view=0,$sam_opt_view=0) {
+		if (empty($psample_id) || $psample_id <= 0) return array();
+		$sample_tests = array();
+		$this->db->select('
+			ptest.ID AS patient_test_id,
+			ptest.patient_sample_id,
+			ptest.sample_test_id, 
+			ptest.is_rejected,
+			test.ID AS test_id,
+			test.test_name,
+			sample_test.testPID,
+			sample_test.is_heading,
+			sample_test.unit_sign,
+			sample_test.field_type,
+			dsample.ID AS dep_sample_id,
+			dep.ID AS department_id,
+			dep.department_name,
+			sample.ID AS sample_id,
+			sample.sample_name,
+			sample_test.group_result,
+			0 AS child_count,
+			0 AS parent_count, 
+			
+			(select fullname from `camlis_aauth_users`where `id` =`sample_test`.entryBy) entry_by, 
+			`sample_test`.entryDate as entry_date, 
+			(select fullname from `camlis_aauth_users`where `id` =`sample_test`.modifiedBy) modified_by, 
+			`sample_test`.modifiedDate as modified_date,
+			
+			rcmt.result_comment,
+			rcmt.sample_id as rcmt_sample_id
+			
+		');
+		$this->db->from('camlis_patient_sample_tests AS ptest');
+		$this->db->join('camlis_std_sample_test AS sample_test', 'ptest.sample_test_id = sample_test.ID', 'inner');
+		$this->db->join('camlis_std_test AS test', 'sample_test.test_id = test.ID', 'inner');
+		$this->db->join('camlis_std_department_sample AS dsample', 'dsample.ID = sample_test.department_sample_id', 'inner');
+		$this->db->join('camlis_std_department AS dep', 'dep.ID = dsample.department_id', 'inner');
+		$this->db->join('camlis_std_sample AS sample', 'sample.ID = dsample.sample_id', 'inner');
+        $this->db->join('result_comment as rcmt', 'rcmt.patient_sample_id = ptest.patient_sample_id and rcmt.sample_id = dsample.sample_id', 'left');
+        //$this->db->join('_view_child_count AS _tmp', 'sample_test.ID = _tmp.testPID', 'left');
+		//$this->db->join('_view_parent_count AS _tmp1', '_tmp1.sample_test_id = sample_test.testPID AND _tmp1.patient_sample_id = ptest.patient_sample_id', 'left');
+
+		$this->db->where('ptest.status', 1);
+		$this->db->where('test.status', 1);
+		$this->db->where('sample_test.status', 1);
+		$this->db->where('dsample.status', 1);
+		$this->db->where('dep.status', 1);
+		$this->db->where('sample.status', 1);
+		$this->db->where('ptest.patient_sample_id', $psample_id);
+
+		// department view
+		if($dep_opt_view!= '' || $dep_opt_view>0){
+			$_arr = explode(',',$dep_opt_view);
+			$_sam = explode(',',$sam_opt_view);
+			$this->db->where_in('`dep`.`ID`',$_arr);
+			$this->db->where_in('sample.ID',$_sam);
+		}
+
+		$this->db->order_by('dep.order', 'asc');
+		$this->db->order_by('sample_test.order', 'asc');
+		if ($get_heirarchy === TRUE) {
+			$this->db->group_start();
+			$this->db->where('sample_test.testPID', $parent);
+			if ($parent == 0) $this->db->or_where('_tmp1.parent_count IS NULL');
+			$this->db->group_end();
+		}
+
+		if ($get_heirarchy === FALSE) return $this->db->get()->result_array();
+
+		//Recursively get all sample test (Header and Child)
+		foreach ($this->db->get()->result_array() as $row) {
+			if (isset($row['child_count']) && (int)$row['child_count'] > 0) {
+				$row['childs'] = $this->get_patient_sample_test($psample_id, TRUE, $row['sample_test_id']);
+			}
+			$sample_tests[] = $row;
+		}
+		return $sample_tests;
+	}
+
+	/**
+	 * Assign Test to Patient's sample
+	 * @param number $psample_id
+	 * @param array $sample_tests
+	 */
+	public function assign_sample_test($psample_id, array $sample_tests = array()) {
+		if ($psample_id > 0 && count($sample_tests) > 0) {
+			$result = $this->get_patient_sample_test($psample_id);
+			$assigned_tests = array_column($result, 'sample_test_id');
+
+			$_data  = array();
+			foreach ($sample_tests as $test) {
+				if ((int)$test > 0 && !in_array($test, $assigned_tests)) {
+					$_data[] = array(
+						'patient_sample_id' => $psample_id,
+						'sample_test_id' => (int)$test,
+						'entryBy' => $this->user_id,
+						'entryDate' => $this->timestamp
+					);
+				}
+			}
+
+			$this->db->trans_start();
+			//Delete Tests that are not in assinged list
+			$this->db->set('status', FALSE);
+			$this->db->set('modifiedBy', $this->user_id);
+			$this->db->set('modifiedDate', $this->timestamp);
+			$this->db->where('status', TRUE);
+			$this->db->where('patient_sample_id', $psample_id);
+			$this->db->where_not_in('sample_test_id', $sample_tests);
+			$this->db->update('camlis_patient_sample_tests');
+
+			if (count($_data) > 0) $this->db->insert_batch('camlis_patient_sample_tests', $_data);
+			$this->db->trans_complete();
+			if ($this->db->trans_status() === TRUE) {
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Check whether Patient's sample already have assigned test
+	 */
+	public function is_assigned_test($psample_id) {
+		if (!$psample_id || (int)$psample_id <= 0) return FALSE;
+
+		$this->db->where('patient_sample_id', $psample_id);
+		$this->db->where('status', TRUE);
+		if ($this->db->count_all_results('camlis_patient_sample_tests') > 0) return TRUE;
+
+		return FALSE;
+	}
+
+	/**
+	 * Get Patient's Sample Detail
+	 * @param $psample_id
+	 */
+	public function get_patient_sample_detail($psample_id) {
+		$this->db->select('
+		    psample_detail.patient_sample_id AS patient_sample_id,
+		    psample_detail.department_sample_id,
+		    psample_detail.sample_description AS sample_description_id,
+		    description.description AS sample_description,
+		    psample_detail.sample_volume1,
+		    psample_detail.sample_volume2');
+		$this->db->where('psample_detail.status', 1);
+		$this->db->where('psample_detail.patient_sample_id', $psample_id);
+		$this->db->from('camlis_patient_sample_detail AS psample_detail');
+		$this->db->join('camlis_std_sample_description AS `description`', 'description.ID = psample_detail.sample_description AND description.status = TRUE', 'left');
+		return $this->db->get()->result_array();
+	}
+
+	/**
+	 * Add patient's sample details
+	 * @param $psample_id
+	 * @param array $sample_details
+	 */
+	public function set_psample_detail($psample_id, array $sample_details = array()) {
+		if ($psample_id > 0 && is_array($sample_details) && count($sample_details) > 0) {
+			$_data = array();
+			$_department_sample_id = array();
+			foreach ($sample_details as $sample_detail) {
+				if (isset($sample_detail['department_sample_id']) && $sample_detail['department_sample_id'] > 0) {
+                    $_department_sample_id[] = $sample_detail['department_sample_id'];
+					$_tmp = array(
+						$psample_id,
+						$sample_detail['department_sample_id'],
+						isset($sample_detail['sample_description']) ? "'".$sample_detail['sample_description']."'" : "''",
+						isset($sample_detail['first_weight']) && $sample_detail['first_weight'] > 0 ? $sample_detail['first_weight'] : "NULL",
+						'sample_volume2' => isset($sample_detail['second_weight']) && $sample_detail['second_weight'] > 0 ? $sample_detail['second_weight'] : "NULL",
+						$this->user_id,
+						"'".$this->timestamp."'"
+					);
+					$_data[] = "(".implode(',', $_tmp).")";
+				}
+			}
+
+			if (count($_data) > 0) {
+				$sql  = "INSERT INTO camlis_patient_sample_detail (patient_sample_id, department_sample_id, sample_description, sample_volume1, sample_volume2, entryBy, entryDate)";
+				$sql .= " VALUES ".implode(",", $_data);
+				$sql .= " ON DUPLICATE KEY UPDATE status = TRUE, sample_description = VALUES(sample_description), sample_volume1 = VALUES(sample_volume1), sample_volume2 = VALUES(sample_volume2), modifiedBy = $this->user_id, modifiedDate = '".$this->timestamp."'";
+
+				$this->db->trans_start();
+				$this->db->set('status', FALSE);
+				$this->db->where('status', TRUE);
+				$this->db->where('patient_sample_id', $psample_id);
+				$this->db->where_not_in('department_sample_id', $_department_sample_id);
+				$this->db->update('camlis_patient_sample_detail');
+
+				$this->db->query($sql);
+				$this->db->trans_complete();
+				if ($this->db->trans_status() === TRUE) {
+					return 1;
+				}
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Update patient's sample details
+	 * @param $psample_id
+	 * @param array $sample_details
+	 */
+	public function update_psample_detail($psample_id, array $sample_details = array()) {
+		if ($psample_id > 0 && is_array($sample_details) && count($sample_details) > 0) {
+			$_data = array();
+			foreach ($sample_details as $sample_detail) {
+				if (isset($sample_detail['department_id']) && $sample_detail['department_id'] > 0) {
+					$_data[] = array(
+						'department_id' => $sample_detail['department_id'],
+						'sample_description' => isset($sample_detail['sample_description']) ? $sample_detail['sample_description'] : "",
+						'sample_volume1' => isset($sample_detail['first_weight']) && $sample_detail['first_weight'] > 0 ? $sample_detail['first_weight'] : NULL,
+						'sample_volume2' => isset($sample_detail['second_weight']) && $sample_detail['second_weight'] > 0 ? $sample_detail['second_weight'] : NULL,
+						'modifiedBy' => $this->user_id,
+						'modifiedDate' => $this->timestamp
+					);
+				}
+			}
+			if (count($_data) > 0) {
+				$this->db->where('patient_sample_id', $psample_id);
+				$this->db->where('status', TRUE);
+				$this->db->update_batch('camlis_patient_sample_detail', $_data, 'department_id');
+			}
+		}
+
+		return $this->db->affected_rows();
+	}
+
+	/**
+	 * Set Rejected Test
+	 * @param $psample_id
+	 * @param array $tests
+	 * @return number Affected Rows
+	 */
+	public function set_rejected_test($psample_id, array $tests) {
+        $this->db->trans_start();
+        //Clear Rejection
+        $this->db->set('is_rejected', 0);
+        $this->db->where('status', TRUE);
+        $this->db->where('is_rejected', 1);
+        $this->db->where('patient_sample_id', $psample_id);
+        $this->db->update('camlis_patient_sample_tests');
+
+        //Set Rejected Test
+        if (count($tests) > 0) {
+            $this->db->set('is_rejected', 1);
+            $this->db->set('modifiedBy', $this->user_id);
+            $this->db->set('modifiedDate', $this->timestamp);
+            $this->db->where('status', TRUE);
+            $this->db->where('patient_sample_id', $psample_id);
+            $this->db->where_in('ID', $tests);
+            $this->db->update('camlis_patient_sample_tests');
+        }
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) return 1;
+		return 0;
+	}
+
+	/**
+	 * Update patient's sample printed info
+	 */
+	public function update_printed_info($psample_id) {
+		$this->db->set('is_printed', 1);
+		$this->db->set('printedBy', $this->user_id);
+		$this->db->set('printedDate', $this->timestamp);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('ID', $psample_id);
+		$this->db->where('labID', $this->laboratory_id);
+		$this->db->update('camlis_patient_sample');
+
+		return $this->db->affected_rows();
+	}
+
+	/**
+	 * View patient's sample
+	 */
+	public function view_all_patient_sample($data) {
+        $table		= "camlis_patient_sample";
+        $primaryKey	= "ID";
+
+        $columns	= array(
+            array(
+                'db'		=> 'psample.ID',
+                'dt'		=> 'psample_id',
+                'field'		=> 'ID'
+            ),
+            array(
+                'db'		=> 'patient.patient_code',
+                'dt'		=> 'patient_code',
+                'field'		=> 'patient_code'
+            ),
+            array(
+                'db'		=> 'patient.patient_name',
+                'dt'		=> 'patient_name',
+                'field'		=> 'patient_name'
+            ),
+            array(
+                'db'		=> 'psample.sample_number',
+                'dt'		=> 'sample_number',
+                'field'		=> 'sample_number'
+            ),
+            array(
+                'db'		=> 'psample.collected_time',
+                'dt'		=> 'collected_time',
+                'field'		=> 'collected_time'
+            ),
+            array(
+                'db'		=> 'psample.received_time',
+                'dt'		=> 'received_time',
+                'field'		=> 'received_time'
+            ),
+            array(
+                'db'		=> 'sample_source.source_name',
+                'dt'		=> 'sample_source',
+                'field'		=> 'source_name'
+            ),
+            array(
+                'db'		=> 'DATE_FORMAT(psample.collected_date, "%d-%m-%Y")',
+                'as'        => 'collected_date',
+                'dt'		=> 'collected_date',
+                'field'		=> 'collected_date',
+                'formatter' => function ($d, $row) {
+                    //$date = DateTime::createFromFormat('Y-m-d', $d)->format('d-m-Y');
+                    $time = DateTime::createFromFormat('H:i:s', $row['collected_time'])->format('H:i');
+                    return $d.' '.$time;
+                }
+            ),
+            array(
+                'db'		=> 'DATE_FORMAT(psample.received_date, "%d-%m-%Y")',
+                'as'        => 'received_date',
+                'dt'		=> 'received_date',
+                'field'		=> 'received_date',
+                'formatter' => function ($d, $row) {
+                    //$date = DateTime::createFromFormat('Y-m-d', $d)->format('d-m-Y');
+                    $time = DateTime::createFromFormat('H:i:s', $row['received_time'])->format('H:i');
+                    return $d.' '.$time;
+                }
+            ),
+            array(
+                'db'		=> 'psample.progress_status',
+                'dt'		=> 'psample_status',
+                'field'		=> 'progress_status',
+                'formatter'	=> function($d, $row) {
+                    $colors	= [1 => 'red', 2 => 'yellow', 3 => '#0faf0f'];
+                    $format = "<span style='display:none;'>".$d."</span><div style='width:100%; height:20px; border:1px solid #e3e3e3; background:".(isset($colors[$d]) ? $colors[$d] : '')."'></div>";
+
+                    return $format;
+                }
+            ),
+            array(
+                'db'		=> 'psample.ID',
+                'dt'		=> 'action',
+                'field'		=> 'ID',
+                'formatter'	=> function($d, $row) {
+                    $formatted = "<a href='".$this->app_language->site_url("sample/edit/".$d)."' class='hint--left hint--info' data-hint='"._t('global.edit')."'><i class='fa fa-edit'></i></a> | ";
+                    $formatted .= "<a href='' class='text-red hint--left hint--error' data-hint='"._t('global.remove')."'><i class='fa fa-trash'></i></a>";
+                    return $formatted;
+                }
+            )
+        );
+
+        $joinQuery  = " FROM $table AS psample 
+                        INNER JOIN v_camlis_all_patients AS patient ON psample.patient_id = patient.pid
+                        INNER JOIN camlis_lab_sample_source AS sample_source ON psample.sample_source_id = sample_source.ID";
+        $extraWhere	= " psample.status = TRUE AND psample.\"labID\" = $this->laboratory_id";
+
+        //Need change
+        if (isset($data['reqData']['is_urgent']) && $data['reqData']['is_urgent'] == 1) {
+            $extraWhere .= " AND psample.is_urgent = 1 AND psample.progress_status IN (1, 2)";
+        } else if (isset($data['reqData']['sample_progress'])) {
+            if ($data['reqData']['sample_progress'] == "pending") $extraWhere .= " AND psample.progress_status = TRUE";
+            else if ($data['reqData']['sample_progress'] == "progress") $extraWhere .= " AND psample.progress_status = 2";
+            else if ($data['reqData']['sample_progress'] == "complete") $extraWhere .= " AND psample.progress_status = 3";
+        }
+
+        $db_config		= $this->load->database('default', TRUE);
+        $sql_details	= array(
+            'user'	=> $db_config->username,
+            'pass'	=> $db_config->password,
+            'db'	=> $db_config->database,
+            'port'	=> $db_config->port,
+            'host'	=> $db_config->hostname
+        );
+
+        $result = DataTable::simple( $data['reqData'], $sql_details, $table, $primaryKey, $columns, $joinQuery, $extraWhere);
+        for ($i=0; $i < count($result['data']); $i++) {
+            $result['data'][$i]['number'] = $i + 1;
+        }
+
+        return $result;
+    }
+}

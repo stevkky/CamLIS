@@ -1,0 +1,223 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+class Laboratory extends MY_Controller {
+	public function __construct() {
+		parent::__construct();
+		$this->app_language->load('laboratory');
+		$this->load->model(array('laboratory_model' => 'labModel', 'user_model' => 'user_model'));
+		
+		$this->data['laboratoryInfo'] = new stdClass();
+	}
+	
+	public function index() {
+		//Clear Current Laboratory Session
+		$this->session->unset_userdata('laboratory');
+		
+		//Get User Assign Laboratory
+		$assign_lab	= $this->session->userdata('user_laboratories');
+
+		if ($this->aauth->is_admin()) {
+			$this->data['laboratories'] = $this->labModel->get_laboratory();
+		} else {
+			$this->data['laboratories'] = $assign_lab && count($assign_lab) > 0 ? $this->labModel->get_laboratory($assign_lab) : array();
+		}
+
+		$this->data['cur_main_page'] = 'laboratory';
+		$this->template->stylesheet->add('assets/camlis/css/camlis_laboratory_style.css');
+		$this->template->content->view('template/pages/laboratories', $this->data);
+		$this->template->content_title = _t('page_header');
+		$this->template->publish();
+	}
+	
+	/**
+	 * Change Lab
+	 * @param integer $lab_id Lab's ID
+	 */
+	public function change($lab_id)
+	{
+		$laboratory = $this->labModel->get_laboratory($lab_id);
+		if (count($laboratory) > 0) {
+			$this->session->set_userdata('laboratory', $laboratory[0]);
+			
+			if ($this->aauth->is_member('camlis_clerk'))
+			{
+				redirect($this->app_language->site_url('sample/new'));
+			}
+			else if ($this->aauth->is_member('camlis_admin') || $this->aauth->is_member('camlis_technician') || $this->aauth->is_member('camlis_lab_manager'))
+			{
+				redirect($this->app_language->site_url('sample/view'));
+			}
+		}
+		else {
+			redirect('laboratory');
+		}
+	}
+
+	/**
+	 * Add new laboratory
+	 */
+	public function add_new_laboratory() {
+		$this->app_language->load('admin');
+
+		$lab_name_en		= $this->input->post('lab_name_en');
+		$lab_name_kh		= $this->input->post('lab_name_kh');
+		$address_en			= $this->input->post('address_en');
+		$address_kh			= $this->input->post('address_kh');
+		//$hf_code			= $this->input->post('hf_code');
+
+		$_data				= new stdClass();
+		$_data->name_en		= trim($lab_name_en);
+		$_data->name_kh		= trim($lab_name_kh);
+		$_data->address_en	= trim($address_en);
+		$_data->address_kh	= trim($address_kh);
+		//$_data->hf_code		= (int)$hf_code;
+
+		$msg = _t('global.msg.fill_required_data');
+		$status = FALSE;
+
+		if (!empty($_data->name_en) && !empty($_data->name_kh)) {
+			//check if laboratory is exist
+			$_condition = "(lab.name_en = '".$_data->name_en."' OR lab.name_kh = '".$_data->name_kh."')";
+			if (count($this->labModel->get_laboratory(NULL, $_condition)) > 0) {
+				$msg = _t('admin.msg.laboratory_exist');
+			} else {
+				$msg = _t('global.msg.save_fail');
+				$laboratory_id = $this->labModel->add_laboratory($_data);
+				if ($laboratory_id > 0) {
+					$status = TRUE;
+					$msg    = _t('global.msg.save_success');
+
+					//Set Variables
+                    $variables = array(
+                        array('lab_id' => $laboratory_id, 'data_key' => 'left-result-footer', 'value' => 'ត្រួតពិនិត្យដោយ', 'status' => TRUE),
+                        array('lab_id' => $laboratory_id, 'data_key' => 'middle-result-footer', 'value' => 'Verified By', 'status' => TRUE),
+                        array('lab_id' => $laboratory_id, 'data_key' => 'right-result-footer', 'value' => 'បុគ្គលិកមន្ទីរពិសោធន៍', 'status' => TRUE)
+                    );
+                    $this->labModel->set_variables($variables);
+				}
+			}
+		}
+		
+		$data['result'] = json_encode(array('status' => $status, 'msg' => $msg));
+		$this->load->view('ajax_view/view_result', $data);
+	}
+	
+	/*
+	 * Update Lab 
+	 */
+	public function update() {
+		$this->app_language->load('admin');
+
+		$laboratory_id		= $this->input->post('laboratory_id');
+		$lab_name_en		= $this->input->post('lab_name_en');
+		$lab_name_kh		= $this->input->post('lab_name_kh');
+		$address_en			= $this->input->post('address_en');
+		$address_kh			= $this->input->post('address_kh');
+		$hf_code			= $this->input->post('hf_code');
+		$clear_photo		= $this->input->post('clear_photo');
+
+		$_data				= new stdClass();
+		$_data->name_en		= trim($lab_name_en);
+		$_data->name_kh		= trim($lab_name_kh);
+		$_data->address_en	= trim($address_en);
+		$_data->address_kh	= trim($address_kh);
+
+		//File Upload config
+		$config['upload_path']   = './assets/camlis/images/laboratory/';
+		$config['allowed_types'] = 'jpg|jpeg|png';
+		$config['file_name']     = $laboratory_id . '-' . date("YmdHis");
+
+		$msg = _t('global.msg.fill_required_data');
+		$status = FALSE;
+
+		if (!empty($_data->name_en) && !empty($_data->name_kh) && (int)$laboratory_id > 0) {
+			//Check if laboratory is exist
+			$_condition = "(lab.name_en = '".$_data->name_en."' OR lab.name_kh = '".$_data->name_kh."') AND lab.\"labID\" != $laboratory_id";
+			if (count($this->labModel->get_laboratory(NULL, $_condition)) > 0) {
+				$msg = _t('admin.msg.laboratory_exist');
+			}
+			else
+			{
+				if ($clear_photo == 200) $_data->photo = NULL;
+				else if (isset($_FILES['lab_icon']) && $_FILES['lab_icon']['error'] == 0) {
+					$this->load->library("upload", $config);
+					if (!file_exists($config['upload_path'])) mkdir($config['upload_path'], '0777', TRUE);
+					if (file_exists($config['upload_path']) && $this->upload->do_upload('lab_icon')) {
+						$file = $this->upload->data();
+						$_data->photo = $file['file_name'];
+					}
+				}
+
+				$result = $this->labModel->update_laboratory($laboratory_id, $_data);
+				if ($result > 0) {
+					$status = TRUE;
+					$msg = _t('global.msg.update_success');
+				}
+			}
+		}
+
+		$data['result'] = json_encode(array('status' => $status, 'msg' => $msg));
+		$this->load->view('ajax_view/view_result', $data);
+	}
+
+	/**
+	 * Delete Laboratory
+	 */
+	public function delete() {
+		$laboratory_id	= $this->input->post("laboratory_id");
+		$msg = _t('global.msg.delete_fail');
+		$status = FALSE;
+		
+		if (!empty($laboratory_id) && (int)$laboratory_id > 0) {
+			$result = $this->labModel->update_laboratory($laboratory_id, array('status' => FALSE));
+			if ($result > 0) {
+				$status = TRUE;
+				$msg = _t('global.msg.delete_success');
+			}
+		}
+
+		$data['result'] = json_encode(array('status' => $status, 'msg' => $msg));
+		$this->load->view('ajax_view/view_result', $data);
+	}
+
+	/**
+	 * View All Laboratory
+	 */
+	public function view_all_laboratory() {
+		$_data			= new stdClass();
+		$_data->reqData	= $this->input->post();
+		
+		$result			= $this->labModel->view_all_laboratory($_data);
+		
+		$data['result']	= json_encode($result);
+		$this->load->view('ajax_view/view_result', $data);
+	}
+
+    /**
+     * Set More property for Laboratory
+     */
+	public function set_variables() {
+        $varialbes  = (array)$this->input->post("varialbes");
+        $data       = array();
+        foreach ($varialbes as $varialbe) {
+            if (isset($varialbe['data_key']) && !empty($varialbe['data_key'])) {
+                $data[] = array(
+                    'data_key' => $varialbe['data_key'],
+                    'value'    => isset($varialbe['value']) ? $varialbe['value'] : '',
+                    'status'   => isset($varialbe['status']) && (int)$varialbe['status'] > 0 ? $varialbe['status'] : 0
+                );
+            }
+        }
+
+        $result = 0;
+        $msg    = _t('global.msg.save_fail');
+        if (count($data) > 0) {
+            if ($result = $this->labModel->set_variables($data) > 0) {
+                $msg = _t('global.msg.save_success');
+            }
+        }
+
+        $data['result']	= json_encode(['status' => $result > 0 ? TRUE : FALSE, 'msg' => $msg]);
+        $this->load->view('ajax_view/view_result', $data);
+    }
+}

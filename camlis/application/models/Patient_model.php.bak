@@ -1,0 +1,362 @@
+<?php
+defined('BASEPATH') OR die('Permission denied!');
+class Patient_model extends MY_Model {
+	public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('patientwebservice');
+    }
+
+	/**
+	 * Get Standard patient type
+	 * @param array $condition Condition to get Data
+	 * @return object DB Query
+	 */
+	public function get_std_patient_type($condition = FALSE) {
+		$this->db->where('status', TRUE);
+		!$condition OR $this->db->where($condition);
+
+		return $this->db->get(self::$CamLIS_db.'.camlis_std_patient_type AS ptype')->result();
+	}
+
+	/**
+	 * Add Standard Patient Type
+	 * @param $_data Data to be inserted
+	 * @return integer new inserted id
+	 */
+	public function add_std_patient_type($_data) {
+		$this->db->set($_data);
+		$this->db->set('entryBy', $this->user_id);
+		$this->db->set('entryDate', $this->timestamp);
+		$this->db->insert(self::$CamLIS_db.'.camlis_std_patient_type');
+
+		return $this->db->insert_id();
+	}
+
+	/**
+	 * Add Standard Patient Type
+	 * @param $ptype_id Patient Type id
+	 * @param $_data Data to be inserted
+	 * @return integer new inserted id
+	 */
+	public function update_std_patient_type($ptype_id, $_data) {
+		$this->db->set($_data);
+		$this->db->set('modifiedBy', $this->user_id);
+		$this->db->set('modifiedDate', $this->timestamp);
+		$this->db->where('status', TRUE);
+		$this->db->where('ID', $ptype_id);
+		$this->db->update(self::$CamLIS_db.'.camlis_std_patient_type');
+
+		return $this->db->affected_rows();
+	}
+
+	/**
+	 * Add new outside patient
+	 * @param $data
+	 * @return mixed
+	 */
+	public function save_outside_patient($data) {
+	    $this->db->set('lab_id', $this->laboratory_id);
+		$this->db->set($data);
+		$this->db->insert(self::$CamLIS_db.".camlis_outside_patient");
+		
+		return $this->db->insert_id();
+	}
+
+	/**
+	 * Update outside patient
+	 * @param $pid
+	 * @param $data
+	 * @return mixed
+	 */
+	public function update_outside_patient($pid, $data) {
+		$this->db->set($data);
+		$this->db->where('pid', $pid);
+		$this->db->update(self::$CamLIS_db.".camlis_outside_patient");
+		
+		return $this->db->affected_rows();
+	}
+
+	/**
+	 * Get outside Patient
+	 * @param $pid
+	 * @return mixed
+	 */
+	public function get_outside_patient($pid) {
+		$this->db->select("pid, patient_name AS name, IF(sex = 1, 'M', 'F') AS sex, dob, phone, province, commune, district, village");
+		$this->db->where('pid', $pid);
+		$this->db->where('status', 1);
+		$query = $this->db->get(self::$CamLIS_db.'.camlis_outside_patient');
+		
+		return $query->row_array();
+	}
+
+    /**
+     * Save PMRS Patient's Info
+     * @param $data
+     */
+	public function save_pmrs_patient($patient_id, $name, $sex, $dob, $phone, $province, $district, $commune, $village) {
+        $sql  = "REPLACE INTO camlis_pmrs_patient (pid, `name`, sex, dob, phone, province, district, commune, village) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $this->db->query($sql, [$patient_id, $name, $sex, $dob, $phone, $province, $district, $commune, $village]);
+
+        return $this->db->affected_rows() > 0 ? TRUE : FALSE;
+    }
+
+    /**
+     * Get Patient Info
+     * @param $patient_id
+     */
+	public function get_patient_info($patient_id) {
+        $this->load->model(array('gazetteer_model'));
+
+        $info   = NULL;
+        if (!empty($patient_id) && isPMRSPatientID($patient_id)) {
+            $info = $this->patientwebservice->execute($patient_id);
+            $info = isset($info->data[0]) ? (array)$info->data[0] : NULL;
+        }
+        else if (!empty($patient_id) && preg_match('/^[0-9]$/', $patient_id)) {
+            $this->db->select("pid, patient_name AS name, IF(sex = 1, 'M', 'F') AS sex, dob, phone, province, commune, district, village");
+            $this->db->where('pid', $patient_id);
+            $this->db->where('status', 1);
+            $query = $this->db->get(self::$CamLIS_db.'.camlis_outside_patient');
+            $info  = $query->row_array();
+        }
+
+        //Get Patient Address
+        if ($info) {
+            $province = $this->gazetteer_model->get_province($info['province']);
+            $district = $this->gazetteer_model->get_district(NULL, $info['district']);
+            $commune  = $this->gazetteer_model->get_commune(NULL, $info['commune']);
+            $village  = $this->gazetteer_model->get_village(NULL, $info['village']);
+            $info['province_en'] = isset($province[0]->name_en) ? $province[0]->name_en : NULL;
+            $info['province_kh'] = isset($province[0]->name_kh) ? $province[0]->name_kh : NULL;
+            $info['district_en'] = isset($district[0]->name_en) ? str_replace("'", '', $district[0]->name_en) : NULL;
+            $info['district_kh'] = isset($district[0]->name_kh) ? str_replace("'", '', $district[0]->name_kh) : NULL;
+            $info['commune_en']  = isset($commune[0]->name_en)  ? str_replace("'", '',$commune[0]->name_en) : NULL;
+            $info['commune_kh']  = isset($commune[0]->name_kh)  ? str_replace("'", '',$commune[0]->name_kh)  : NULL;
+            $info['village_en']  = isset($village[0]->name_en)  ? str_replace("'", '',$village[0]->name_en)  : NULL;
+            $info['village_kh']  = isset($village[0]->name_kh)  ? str_replace("'", '',$village[0]->name_kh) : NULL;
+        }
+
+        return $info;
+    }
+
+    /**
+     * Get All Patients for DataTable
+     * @param $data
+     * @return array
+     */
+	public function view_all_patients($data) {
+		$table		= "v_camlis_all_patients";
+		$primaryKey	= "patient_id";
+		
+		$columns	= array(
+            /*array(
+                'db'        => 'patient.patient_id',
+                'dt'        => 'DT_RowData',
+                'field'     => 'patient_id',
+                'formatter' => function($d, $row) {
+                    $info   = NULL;
+                    if (isPMRSPatientID($d)) {
+                        $info = $this->patientwebservice->execute($d);
+                        if (isset($info->data[0])) {
+                            $info->data[0]->sex = $info->data[0]->sex == 'M' ? _t('global.male') : _t('global.female');
+                            return $info->data[0];
+                        }
+                    }
+
+                    return isset($info->data[0]) ? $info->data[0] : NULL;
+                }
+            ),*/
+			array(
+				'db'	=> 'patient.patient_id',
+				'dt'	=> 'patient_id',
+				'field'	=> 'patient_id'
+			),
+			array(
+				'db'	    => 'patient.patient_name',
+				'dt'	    => 'patient_name',
+				'field'	    => 'patient_name'
+			),
+			array(
+				'db'		=> 'patient.sex',
+				'dt'		=> 'gender',
+				'field'		=> 'sex',
+				'formatter'	=> function($d, $row) {
+					$d	= $d == '1' ? _t('global.male') : _t('global.female');
+					return $d;
+				}
+			),
+			array( 
+				'db'		=> 'SUM(IF(psample.ID IS NULL, 0, 1)) AS has_sample',
+				'dt'		=> 'has_sample',
+				'field'		=> 'has_sample',
+				'formatter'	=> function($d, $row) {
+                    return $d > 0 ? "<i class='fa fa-check-circle text-green'></i>" : "";
+				}
+			),
+			array(
+				'db'		=> 'patient.patient_id',
+				'dt'		=> 'action',
+				'field'		=> 'patient_id',
+				'formatter'	=> function($d, $row) {
+				    $action  = "<a href='".$this->app_language->site_url("patient/details/$d")."' class='hint--left hint--info' data-hint='"._t('global.view_details')."'><i class='fa fa-search'></i></a>&nbsp;|&nbsp;";
+					$action .= "<a href='".$this->app_language->site_url("sample/new/$d")."' class='hint--left hint--success text-green' data-hint='"._t('sample.add_sample')."'><i class='glyphicon glyphicon-plus-sign'></i></a>";
+					if (!isPMRSPatientID($d)) $action .= "&nbsp;|&nbsp;<a href='#' class='hint--left hint--error text-red remove' data-hint='"._t('global.remove')."'><i class='fa fa-trash'></i></a>";
+				    return $action;
+				}
+			)
+		);
+		
+		$joinQuery	= " FROM $table AS patient
+						LEFT JOIN camlis_patient_sample AS psample ON patient.patient_id = psample.patient_id AND psample.status = 1 ";
+		
+		$patient_id	= isset($data['reqData']['patient_id']) ? $data['reqData']['patient_id'] : NULL;
+		$hf_code	= isset($data['reqData']['hf_code']) ? $data['reqData']['hf_code'] : NULL;
+
+		$extraWhere	= " patient.lab_id = $this->laboratory_id ";
+		
+		if (!empty($patient_id)) {
+			$extraWhere .= " AND patient.patient_id = '".$patient_id."'";
+		}
+
+		$extraWhere .= " GROUP BY patient.patient_id";
+		
+		$db_config		= $this->load->database('default', true);
+		$sql_details	= array(
+			'user'	=> $db_config->username,
+			'pass'	=> $db_config->password,
+			'port'	=> $db_config->port,
+			'db'	=> $db_config->database,
+			'host'	=> $db_config->hostname
+		);
+		
+		$this->load->library('DataTable');
+		$result = DataTable::simple( $data['reqData'], $sql_details, $table, $primaryKey, $columns, $joinQuery, $extraWhere);
+		for ($i=0; $i < count($result['data']); $i++) {
+			$result['data'][$i]['number'] = $i + 1;
+		}
+		
+		return $result;
+	}
+
+	/**
+	 * Get Standard Patient Type (DataTable)
+	 */
+	public function view_std_patient_type($data) {
+		$_unit = array(1 => 'global.day', 7 => 'global.week', 30 => 'global.month', 365 => 'global.year');
+
+		$table		= 'camlis_std_patient_type';
+		$primaryKey	= 'ID';
+
+		$columns	= array(
+			array(
+				'db'		=> 'ID',
+				'dt'		=> 'ID',
+				'field'		=> 'ID'
+			),
+			array(
+				'db'		=> 'min_age',
+				'dt'		=> 'min_age',
+				'field'		=> 'min_age'
+			),
+			array(
+				'db'		=> 'max_age',
+				'dt'		=> 'max_age',
+				'field'		=> 'max_age'
+			),
+			array(
+				'db'		=> 'min_age_unit',
+				'dt'		=> 'min_age_unit',
+				'field'		=> 'min_age_unit'
+			),
+			array(
+				'db'		=> 'max_age_unit',
+				'dt'		=> 'max_age_unit',
+				'field'		=> 'max_age_unit'
+			),
+			array(
+				'db'		=> 'is_equal',
+				'dt'		=> 'is_equal',
+				'field'		=> 'is_equal'
+			),
+			array(
+				'db'		=> 'gender',
+				'dt'		=> 'gender',
+				'field'		=> 'gender'
+			),
+			array(
+				'db'		=> 'type',
+				'dt'		=> 'type',
+				'field'		=> 'type'
+			),
+			array(
+				'db'		=> 'gender',
+				'dt'		=> 'gender_format',
+				'field'		=> 'gender',
+				'formatter'	=> function($d, $row) {
+					if ($d == 1) return _t('global.male');
+					else if ($d == 2) return _t('global.female');
+					return _t('global.male').' & '._t('global.female');
+				}
+			),
+			array(
+				'db'		=> 'min_age',
+				'dt'		=> 'min_age_format',
+				'field'		=> 'min_age',
+				'formatter'	=> function($d, $row) use($_unit) {
+					return $d.' '.(isset($_unit[$row['min_age_unit']]) ? _t($_unit[$row['min_age_unit']]) : '');
+				}
+			),
+			array(
+				'db'		=> 'max_age',
+				'dt'		=> 'max_age_format',
+				'field'		=> 'max_age',
+				'formatter'	=> function($d, $row) use($_unit) {
+					return $d.' '.(isset($_unit[$row['max_age_unit']]) ? _t($_unit[$row['max_age_unit']]) : '');
+				}
+			),
+			array(
+				'db'		=> 'is_equal',
+				'dt'		=> 'range_sign',
+				'field'		=> 'is_equal',
+				'formatter'	=> function($d, $row) {
+					$_val = '&ge;&nbsp;&nbsp;'._t('global.age').($d == 1 ? '&nbsp;&nbsp;&le;' : ' <');
+					return "<center><b>$_val</b></center>";
+				}
+			),
+			array(
+				'db'		=> 'ID',
+				'dt'		=> 'action',
+				'field'		=> 'ID',
+				'formatter'	=> function($d, $row) {
+					return "<center>
+								<a href='#' class='text-blue edit hint--left hint--info' data-hint='"._t('global.edit')."'><i class='fa fa-pencil-square-o'></i></a>&nbsp;|&nbsp;
+								<a href='#' class='text-red remove hint--left hint--error' data-hint='"._t('global.remove')."'><i class='fa fa-trash'></i></a>
+							</center>";
+				}
+			)
+		);
+
+		$extraWhere	= " status = TRUE";
+
+		//config
+		$db_config		= $this->load->database('default', TRUE);
+		$sql_details	= array(
+			'user'	=> $db_config->username,
+			'pass'	=> $db_config->password,
+			'port'	=> $db_config->port,
+			'db'	=> $db_config->database,
+			'host'	=> $db_config->hostname
+		);
+
+		$this->load->library('DataTable');
+		$result = DataTable::simple( $data, $sql_details, $table, $primaryKey, $columns, NULL, $extraWhere );
+
+		for ($i=0; $i < count($result['data']); $i++) {
+			$result['data'][$i]['number'] = $i + 1;
+		}
+
+		return $result;
+	}
+ }

@@ -1,0 +1,73 @@
+@font-face {
+    font-family: Hanuman;
+    src: url('../../fonts/Hanuman.ttf');
+}
+@font-face {
+    font-family: 'KhmerOS_muollight';
+    src: url('../../fonts/KhmerOS_muollight.ttf');
+}
+
+@font-face {
+    font-family: 'SourceSerifPro-Regular';
+    src: url('../../fonts/SourceSerifPro-Regular.ttf');
+}
+
+.Hanuman {
+    font-family: 'SourceSerifPro-Regular', 'Hanuman', 'serif';
+}
+
+.KhmerMoulLight {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS_muollight', 'serif';
+}
+
+page[size="A4"] {
+    padding: 1cm;
+    min-height: 21cm !important;
+    height: auto !important;
+    font-family: 'SourceSerifPro-Regular', 'serif';
+}
+
+table {
+    width: 100%;
+}
+
+table.result,
+table.result th,
+table.result td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+table.result th,
+table.result td {
+    padding: 5px;
+}
+
+table.result th {
+    background: #e9e9e9;
+}
+
+table.result td {
+    font-size: 15px;
+}
+
+.text-left {
+    text-align: left;
+}
+.text-center {
+    text-align: center;
+}
+
+@media print {
+    @page {
+        margin: 1cm;
+    }
+
+    body,
+    page[size="A4"] {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        background-color: transparent;
+    }
+}

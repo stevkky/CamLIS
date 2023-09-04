@@ -1,0 +1,462 @@
+<script>
+    var patient_info            = JSON.parse('<?php echo json_encode($patient); ?>');
+    var sample_descriptions     = JSON.parse('<?php echo json_encode($sample_descriptions); ?>');
+	var msg_choose_testDt		= "<?php echo _t('sample.msg.choose_testDt');				?>";
+	var msg_required_data		= "<?php echo _t('global.msg.fill_required_data');			?>";
+	var msg_must_save_sample	= "<?php echo _t('sample.msg.must_save_sample');			?>";
+	var msg_must_assign_test	= "<?php echo _t('sample.msg.must_assign_test');			?>";
+	var msg_must_select_test	= "<?php echo _t('sample.msg.must_select_test');			?>";
+	var msg_must_select_sample	= "<?php echo _t('sample.msg.choose_sample');				?>";
+	var msg_col_rec_dt_error	= "<?php echo _t('sample.msg.col_rec_dt_error');			?>";
+	var msg_reject_cmt_err		= "<?php echo _t('global.msg.fill_required_data');			?>";
+	var msg_dob_not_after_now	= "<?php echo _t('sample.msg.dob_not_after_now');			?>";
+	var msg_test_rejected		= "<?php echo _t('sample.msg.test_is_reject');				?>";
+	var msg_choose_sample_test	= "<?php echo _t('sample.msg.must_choose_sample_test');		?>";
+	var msg_col_dt_vs_now		= "<?php echo _t('sample.msg.col_dt_vs_now');				?>";
+	var msg_rec_dt_vs_now		= "<?php echo _t('sample.msg.rec_dt_vs_now');				?>";
+	var label_print_result		= "<?php echo _t('sample.preview_result');					?>";
+	var label_department		= "<?php echo _t('global.department');						?>";
+	var label_sample			= "<?php echo _t('sample.sample_type');						?>";
+	var label_no_data			= "<?php echo _t('global.no_data');							?>";
+	var label_choose_performer	= "<?php echo _t('sample.choose_performer');				?>";
+    var label_sample_desription	= "<?php echo _t('sample.sample_desc');				        ?>";
+    var label_weight1       	= "<?php echo _t('sample.weight1');				            ?>";
+    var label_weight2	        = "<?php echo _t('sample.weight2');				            ?>";
+	var msg_loading				= "<?php echo _t('global.plz_wait');						?>";
+	var msg_saving				= "<?php echo _t('global.saving');							?>";
+	var msg_save_fail			= "<?php echo _t('global.msg.save_fail');					?>";
+	var q_delete_patient_sample	= "<?php echo _t('sample.q.delete_patient_sample');			?>";
+	var msg_delete_fail			= "<?php echo _t('global.msg.delete_fail');					?>";
+</script>
+<?php if (!isset($patient_sample) || !$patient_sample || !isset($patient) || !$patient) { ?>
+	<div class="col-sm-12">
+		<div class="well text-center text-red" id="no-result"><b><?php echo _t('global.no_result'); ?></b></div>
+	</div>
+<?php } else { ?>
+<div class="col-sm-12">
+	<div id="patient-info-wrapper">
+		<!-- View Patient's Info -->
+		<div class="patient-info-view">
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.patient_name'); ?> :</label>
+				</div>
+				<div class="col-sm-10">
+					<?php echo $patient['name']; ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.sex'); ?> :</label>
+				</div>
+				<div class="col-sm-10">
+					<?php echo $patient['sex'] == 'F' ? _t('global.female') : _t('global.male'); ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.age'); ?> :</label>
+				</div>
+				<div class="col-sm-10">
+					<?php
+                        echo getAging($patient['dob']);
+						/*$days	= getAge($patient['dob']);
+						$year	= floor($days / 365);
+						$month	= floor(($days % 365) / 30);
+						$day	= floor(($days % 365) % 30);
+
+						$age	= $year.' '._t('global.year').'&nbsp;&nbsp;&nbsp;'.$month.' '._t('global.month').'&nbsp;&nbsp;&nbsp;'.$day.' '._t('global.day');
+						echo $age;*/
+					?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.phone'); ?> :</label>
+				</div>
+				<div class="col-sm-10">
+					<?php echo $patient['phone']; ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.address'); ?> :</label>
+				</div>
+				<div class="col-sm-10">
+					<?php 
+                        $village_name  = 'village_'.$app_lang;
+                        $commune_name  = 'commune_'.$app_lang;
+                        $district_name = 'district_'.$app_lang;
+                        $province_name = 'province_'.$app_lang; 
+                        echo $patient[$village_name].' Village - '.$patient[$commune_name].' Commune - '.$patient[$district_name].' District - '.$patient[$province_name].' Province';
+					?>
+				</div>
+			</div>
+		</div>
+		<!-- Patient's Form Entry -->
+		<form id="patient-info-form" class="well form-vertical" style="display: none;">
+			<div class="row">
+				<div class="col-sm-4">
+					<label class="control-label">
+						<?php echo _t('patient.patient_name'); ?>
+					</label>
+					<input type="text" name="patient_name" id="patient_name" class="form-control">
+				</div>
+				<div class="col-sm-4">
+					<label class="control-label">
+						<?php echo _t('patient.sex'); ?>
+					</label>
+					<div>
+						<label class="control-label" style="cursor:pointer;">
+							<input type="radio" name='patient_sex' value="1" checked>&nbsp;
+							<?php echo _t('global.male'); ?>
+						</label>
+						&nbsp;&nbsp;
+						<label class="control-label" style="cursor:pointer;">
+							<input type="radio" name='patient_sex' value="2">&nbsp;
+							<?php echo _t('global.female'); ?>
+						</label>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<label for="patient_dob" class="control-label hint--right hint--error hint--always">
+						<?php echo _t('patient.dob').' / '._t('global.age'); ?>
+					</label>
+					<div class="input-group">
+						<span class="input-group-addon" id="basic-addon1"><i class="glyphicon glyphicon-calendar"></i></span>
+						<input type="text" class="form-control" id="patient_dob">
+						<span class="input-group-addon" id="basic-addon1"><b><?php echo _t('global.age'); ?></b></span>
+						<input type="text" class="form-control" id="patient_age" size="3" placeholder="<?php echo _t('global.year'); ?>" onkeypress="return isNumber(event);">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-4">
+					<label class="control-label">
+						<?php echo _t('patient.phone'); ?>
+					</label>
+					<input type="text" class="form-control" name="phone" id="phone">
+				</div>
+				<div class="col-sm-8">
+					<label class="control-label">
+						<?php echo _t('patient.address'); ?>
+					</label>
+					<div class="col-sm-12" style="padding:0;">
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="province" id="province" class="form-control" data-get="district">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_province'); ?>
+								</option>
+								<?php
+								foreach($provinces as $pro) {
+									$app_lang	= empty($app_lang) ? 'en' : $app_lang;
+									$name		= 'name_'.$app_lang;
+
+									echo "<option value='".$pro->code."'>".$pro->$name."</option>";
+								}
+								?>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="district" id="district" class="form-control" data-get="commune">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_district'); ?>
+								</option>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="commune" id="commune" class="form-control" data-get="village">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_commune'); ?>
+								</option>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0; padding-right:0">
+							<select name="village" id="village" class="form-control">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_village'); ?>
+								</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row" style="margin-top:30px;">
+				<div class="col-sm-12" style="text-align: right;">
+					<button type="button" class="btn btn-primary" id="btnSavePatient"><i class="fa fa-floppy-o"></i>&nbsp;<?php echo _t('global.save'); ?></button>
+					<button type="button" class="btn btn-default" id="btnCancelPatient"><i class="fa fa-remove"></i>&nbsp;<?php echo _t('global.cancel'); ?></button>
+				</div>
+			</div>
+		</form>
+		<input type="hidden" id="patient-id" data-value="<?php echo $patient_sample['patient_id']; ?>">
+	</div>
+
+	<!-- Sample Forms -->
+    <!--?php
+        $collected_date = DateTime::createFromFormat('Y-m-d', $patient_sample['collected_date']);
+        $collected_date = $collected_date ? $collected_date->format('d/m/Y') : "";
+        $collected_time = DateTime::createFromFormat('H:i:s', $patient_sample['collected_time']);
+        $collected_time = $collected_time ? $collected_time->format('h:i A') : "";
+        $received_date  = DateTime::createFromFormat('Y-m-d', $patient_sample['received_date']);
+        $received_date  = $received_date ? $received_date->format('d/m/Y') : "";
+        $received_time  = DateTime::createFromFormat('H:i:s', $patient_sample['received_time']);
+        $received_time  = $received_time ? $received_time->format('h:i A') : "";
+    ?-->
+
+    <?php
+    $collected_date = DateTime::createFromFormat('Y-m-d', $patient_sample['collected_date']);
+    $collected_date = $collected_date ? $collected_date->format('d/m/Y') : "";
+    $collected_time = DateTime::createFromFormat('H:i:s', $patient_sample['collected_time']);
+    $collected_time = $collected_time ? $collected_time->format('H:i') : "";
+    $received_date  = DateTime::createFromFormat('Y-m-d', $patient_sample['received_date']);
+    $received_date  = $received_date ? $received_date->format('d/m/Y') : "";
+    $received_time  = DateTime::createFromFormat('H:i:s', $patient_sample['received_time']);
+    $received_time  = $received_time ? $received_time->format('H:i') : "";
+    ?>
+	<div class="sample-form-wrapper" style="margin-top: 40px;">
+		<h4 class="content-header"><?php echo _t('sample.edit_sample'); ?></h4>
+		<hr>
+		<div id="sample-forms">
+			<div class="panel panel-default sample-form edit">
+				<form action="" method="post" class="form-vertical frm-sample-entry">
+					<div class="panel-heading">
+						<div class="header"><?php echo _t('global.sample'); ?> <span class="sample-order">1</span></div>
+                        <div class='sample-title'>
+                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>&nbsp;
+                            <div style="margin-left: 0;" class="sample-number-title">
+                                <b><?php echo _t('sample.sample_number')." : "; ?></b>
+                                <b class="value text-blue"><?php echo $patient_sample['sample_number']; ?></b>
+                            </div>&nbsp;&nbsp;
+                            <div class="collected-date-title">
+                                <b><?php echo _t('sample.collect_dt')." : "; ?></b>
+                                <b class="value text-blue"><?php echo $collected_date.' '.$collected_time; ?></b>
+                            </div>&nbsp;&nbsp;
+                            <div class="received-date-title">
+                                <b><?php echo _t('sample.receive_dt')." : "; ?></b>
+                                <b class="value text-blue"><?php echo $received_date.' '.$received_time; ?></b>
+                            </div>
+                        </div>
+						<a href="#" class="btnMinimized pull-right"><i class="fa fa-minus"></i></a>
+					</div>
+					<div class="panel-body">
+						<div class='col-lg-10'>
+							<div class="row">
+								<div class="col-md-4">
+									<label class="control-label">
+										<?php echo _t('sample.sample_number'); ?></label>
+									<input type="text" class="form-control" name="sample_number" value="<?php echo $patient_sample['sample_number']; ?>" disabled>
+								</div>
+								<div class="col-md-4">
+									<label class="control-label">
+										<?php echo _t('sample.sample_source'); ?> <sup class="fa fa-asterisk" style="font-size:8px"></sup></label>
+									<select name="sample_source" class="form-control">
+										<option value="-1" style="color:#d8d5d5;">
+											<?php echo _t('global.choose'); ?>
+										</option>
+										<?php
+										foreach($sample_source as $sc) {
+											$selected = "";
+											if ($sc->source_id == $patient_sample['sample_source_id']) $selected = "selected";
+											echo "<option value='$sc->source_id' $selected>$sc->source_name</option>";
+										}
+										?>
+									</select>
+								</div>
+								<!-- Requester -->
+								<div class="col-md-4">
+									<label class="control-label"><?php echo _t('sample.requester'); ?> <sup class="fa fa-asterisk" style="font-size:8px"></sup></label>
+									<select name="requester" class="form-control">
+										<option value="-1"><?php echo _t('global.choose'); ?></option>
+										<?php
+										foreach($requesters as $requester) {
+											$selected = "";
+											if ($requester->requester_id == $patient_sample['requester_id']) $selected = "selected";
+											echo "<option value='$requester->requester_id' $selected>$requester->requester_name</option>";
+										}
+										?>
+									</select>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-4">
+									<label class="control-label"><?php echo _t('sample.collect_dt'); ?> <sup class="fa fa-asterisk" style="font-size:8px"></sup></label>
+									<div class="input-group">
+										<input type="text" class="form-control dtpicker" name="collected_date" value="<?php echo $collected_date; ?>">
+										<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+										<input type="text" class="form-control coltimepicker narrow-padding" name="collected_time" value="<?php echo $collected_time; ?>">
+										<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<label class="control-label">
+										<?php echo _t('sample.receive_dt'); ?> <sup class="fa fa-asterisk" style="font-size:8px"></sup></label>
+									<div class="input-group">
+										<input type="text" class="form-control dtpicker" name="received_date" value="<?php echo $received_date; ?>">
+										<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+										<input type="text" class="form-control rectimepicker narrow-padding" name="received_time" value="<?php echo $received_time; ?>">
+										<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<label class="control-label">
+										<?php echo _t('sample.sample_status'); ?>
+									</label>
+									<div style="margin-top:3px;">
+										<div class="checkbox-wrapper" style="margin-bottom: 3px;">
+											<label class='checkbox-inline'>
+												<input type="checkbox" value="1" name="is_urgent" <?php echo $patient_sample['is_urgent'] == 1 ? 'checked' : ''; ?> >
+												<?php echo _t('sample.urgent'); ?>
+											</label>
+										</div>
+										<div class="checkbox-wrapper" style="margin-bottom: 3px;">
+											<label class='checkbox-inline'>
+												<input type="checkbox" value="1" name="payment_needed" <?php echo $patient_sample['payment_needed'] == 1 ? 'checked' : ''; ?> >
+												<?php echo _t('sample.payment_need'); ?>
+											</label>
+										</div>
+										<div class="checkbox-wrapper" style="margin-bottom: 3px;">
+											<label class='checkbox-inline'>
+												<input type="checkbox" value="1" name="for_research" <?php echo $patient_sample['for_research'] == 1 ? 'checked' : ''; ?> >
+												<?php echo _t('sample.research'); ?>
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12">
+									<label class="control-label">
+										<?php echo _t('sample.clinical_history'); ?>
+									</label>
+									<textarea name="clinical_history" cols="30" rows="1" class="form-control" style="resize:none;"><?php echo $patient_sample['clinical_history']; ?></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-2 btn-wrapper">
+							<?php
+								$is_assigned_test = isset($patient_sample['is_assigned_test']) ? $patient_sample['is_assigned_test'] : false;
+								$disabled = $is_assigned_test ? '' : 'disabled';
+							?>
+							<div class="form-group">
+								<button type="button" class="btn btn-primary btnShowTestModal margintop10" disabled><i class="fa fa-list-alt"></i>&nbsp;
+									<?php echo _t('sample.assign_test'); ?>
+								</button>
+								<button type="submit" class="btn btn-primary btnSaveSample margintop10" action-type='save' disabled><i class="fa fa-floppy-o"></i>&nbsp;
+									<?php echo _t('global.save'); ?>
+								</button>
+								<?php if ($this->aauth->is_group_allowed('reject_sample')) { ?>
+									<button type="submit" class="btn btn-danger btnRejectSample margintop10" action-type='save-reject' data-enabled="<?php echo $is_assigned_test; ?>" <?php echo $disabled; ?> >
+										<span class="glyphicon glyphicon-minus-sign"></span>&nbsp;</i><?php echo _t('sample.rejected'); ?>
+									</button>
+								<?php } if ($this->aauth->is_group_allowed('add_psample_result')) { ?>
+									<button type="button" class="btn btn-primary btnAddResult margintop10" data-enabled="<?php echo $is_assigned_test; ?>" <?php echo $disabled; ?> >
+										<i class="fa fa-pencil"></i>&nbsp;<?php echo _t('sample.add_result'); ?>
+									</button>
+								<?php } ?>
+								<button type="button" class="btn btn-success btnPreview margintop10" data-enabled="<?php echo $is_assigned_test; ?>" <?php echo $disabled; ?> >
+									<i class="fa fa-eye" aria-hidden="true"></i>&nbsp;<?php echo _t('sample.preview_result'); ?>
+								</button>
+								<button type="button" class="btn btn-danger btnRemove margintop10"><i class="fa fa-trash"></i>&nbsp;
+									<?php echo _t('global.remove'); ?>
+								</button>
+							</div>
+						</div>
+                         
+                        
+                        <div class="col-sm-12 sample-user-info">
+                            <div class="well">
+                            
+                            	<!-- entry user -->
+                                <b><i class="fa fa-user"></i>&nbsp;<?php echo _t('sample.sample_entry_by'); ?> : </b>
+                                <div class="sample-entry-user-list">
+                                    <span class="sample-entry-user label label-primary template hide"></span>
+                                    <?php
+                                        $sample_entry_users = isset($patient_sample_user['sample_entry_user']) ? explode(',', $patient_sample_user['sample_entry_user']) : []; 
+										$sample_entry_date = isset($patient_sample_user['entry_date']) ?$patient_sample_user['entry_date']: [];
+										
+                                        $result_entry_users = isset($patient_sample_user['result_entry_user']) ? explode(',', $patient_sample_user['result_entry_user']) : [];
+										
+                                        if (isset($patient_sample_user['sample_entry_user']) && !empty($patient_sample_user['sample_entry_user']) && count($sample_entry_users) > 0) {
+                                            foreach ($sample_entry_users as $s_username) {
+                                                echo "<span class='sample-entry-user label label-primary user'>$s_username</span>";
+                                            }
+                                        } else {
+                                            echo "<span class='no-result'>N/A</span>";
+                                        }
+                                    ?>
+                                </div>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <b><?php echo _t('sample.entry_date'); ?> : </b>
+                                <div class="result-entry-user-list">
+                                    <span class="result-entry-user label label-primary template hide"></span>
+                                    <?php 
+                                        if (isset($patient_sample_user['entryDate']) && !empty($patient_sample_user['entryDate'])) { 
+                                                echo "<span class='result-entry-user label label-primary user'>".$patient_sample_user["entryDate"]."</span>"; 
+                                        } else {
+                                            echo "<span class='no-result'>N/A</span>";
+                                        }
+                                    ?>
+                                    
+                                     
+                                </div>
+                                
+                                
+                                <!-- modified by  -->
+								 &nbsp;&nbsp;&nbsp;&nbsp;
+                                <b><i class="fa fa-user"></i>&nbsp;<?php echo _t('sample.modified_by'); ?> : </b>
+                                <div class="result-entry-user-list">
+                                    <span class="result-entry-user label label-primary template hide"></span>
+                                    <?php 
+                                        if (isset($patient_sample_user['modifiedBy']) && !empty($patient_sample_user['modifiedBy'])) { 
+                                                echo "<span class='result-entry-user label label-primary user'>".$patient_sample_user["modifiedBy"]."</span>"; 
+                                        } else {
+                                            echo "<span class='no-result'>N/A</span>";
+                                        }
+                                    ?> 
+                                </div>  
+                                 &nbsp;&nbsp;&nbsp;&nbsp;
+                                <b><?php echo _t('sample.modified_date'); ?> : </b>
+                                <div class="result-entry-user-list">
+                                    <span class="result-entry-user label label-primary template hide"></span> 
+                                    
+                                    <?php
+                                        if (isset($patient_sample_user['modifiedDate']) && !empty($patient_sample_user['modifiedDate'])) { 
+                                                echo "<span class='result-entry-user label label-primary user'>".$patient_sample_user["modifiedDate"]."</span>";        
+                                        } else {
+                                            echo "<span class='no-result'>N/A</span>";
+                                        }
+                                    ?>
+                                </div>  <!-- modified -->                             
+                                
+                                
+                                
+                            </div>
+                        </div>
+					</div>
+					<input type="hidden" name="patient_sample_id" data-value="<?php echo $patient_sample['patient_sample_id']; ?>">
+					<input type="hidden" id="department_result_view_optional" />  
+					<input type="hidden" id="sample_result_view_optional" />  
+                    
+				</form>
+			</div>
+			<button type="button" id="btnMore" class="btn btn-flat btn-primary col-sm-12"><i class="fa fa-plus"></i>&nbsp;<?php echo _t('sample.add_sample'); ?></button>
+		</div>
+	</div>
+</div>
+<?php } ?>
+
+
+
+<style>
+
+    .col-lg-3 {
+        width: 20%;
+    }
+
+    .col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+        position: relative;
+        min-height: 1px;
+        padding-right: 1px;
+        padding-left: 15px;
+    }
+</style>

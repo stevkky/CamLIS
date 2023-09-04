@@ -1,0 +1,166 @@
+@font-face {
+    font-family: 'KhmerOS';
+    src: url('../../fonts/KhmerOS.ttf');
+}
+@font-face {
+    font-family: 'Hanuman';
+    src: url('../../fonts/Hanuman.ttf');
+}
+@font-face {
+    font-family: 'KhmerOS_muollight';
+    src: url('../../fonts/KhmerOS_muollight.ttf');
+}
+
+@font-face {
+    font-family: 'SourceSerifPro-Regular';
+    src: url('../../fonts/SourceSerifPro-Regular.ttf');
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+page[size="A4"] {
+    padding: .8cm .8cm 0;
+    display: flex;
+    font-family: 'SourceSerifPro-Regular', 'Hanuman', 'serif';
+    font-size: 10pt;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+section {
+    flex-grow: 1;
+    padding-bottom: 2cm;
+    position: relative;
+    overflow: hidden;
+}
+
+section:first-child {
+    padding-right: .5cm;
+    border-right: 1px dashed lightgrey;
+}
+
+section:last-child {
+    padding-left: .5cm;
+}
+div.header {
+    width: 100%;
+    margin-bottom: 5px;
+}
+div.header table {
+    width: 100%;
+}
+
+div.header table td.logo {
+    width: 55px;
+}
+div.header table td.logo img{
+    width: 50px;
+}
+
+div.header table td.title {
+    text-align: center;
+    vertical-align: middle;
+}
+div.header table td.title b {
+    display: block;
+    margin-bottom: 5px;
+}
+
+div.header table td.title b.laboratory-name {
+    font-family: 'SourceSerifPro-Regular', 'KhmerOS_muollight', 'serif';
+}
+
+div.patient-sample-info {
+    border: 1px solid black;
+    padding: .1cm;
+    margin-bottom: 10px;
+    display: flex;
+}
+
+div.patient-sample-info:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+div.patient-sample-info td.info-label {
+    padding-right: 4px;
+    font-weight: bold;
+    color: black !important;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+div.patient-sample-info div.patient-info {
+    float: left;
+    margin-right: 10px;
+    flex-grow: 1;
+}
+
+div.patient-sample-info div.sample-info {
+    float: right;
+    flex-grow: 1;
+}
+
+div.test-list > ul {
+    margin: 0;
+    padding-left: .5cm;
+    list-style-image: url("../../images/bullet.png");
+}
+div.test-list > ul > li {
+    margin-bottom: 6px;
+}
+
+div.test-list > ul > li > b {
+    border-bottom: 1px solid black;
+    display: block;
+    margin-bottom: 5px;
+}
+
+div.test-list > ul > li > ul {
+    padding-left: .3cm;
+    list-style: none none;
+}
+
+.footer {
+    position: absolute;
+    width: 100%;
+    font-size: 9pt;
+    bottom: .4cm;
+    left: 0;
+}
+.footer .info {
+    margin-bottom: 7px;
+    font-size: 10pt;
+    display: flex;
+}
+.footer .info div {
+    flex-grow: 1;
+}
+.footer .address {
+    text-align: center;
+    padding-top: 6px;
+    border-top: 1px solid black;
+}
+
+.text-right {
+    text-align: right;
+}
+
+@media print {
+    body,
+    page[size="A4"] {
+        margin: 0;
+    }
+
+    body {
+        padding: 0;
+        background: transparent;
+    }
+}

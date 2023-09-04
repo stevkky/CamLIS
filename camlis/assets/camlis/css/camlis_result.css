@@ -1,0 +1,18 @@
+#tb_test_result, #tb_result_cmt th {
+    border:1px solid #d3d3d3;
+}
+
+#tb_test_result th, #tb_result_cmt th {
+    background: rgba(237, 237, 237, 0.56);
+}
+
+#tb_result_cmt td {
+    padding:0;
+}
+#tb_result_cmt #btn_select_cmt {
+    margin-top: 10px;
+}
+
+#tb_result_cmt textarea {
+    resize: none;
+}

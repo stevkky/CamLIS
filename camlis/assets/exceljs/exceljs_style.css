@@ -1,0 +1,175 @@
+.parent {
+    position: absolute;
+    /* position it in the browser using the `left`, `top` and `margin` 
+    attributes */
+}
+.child {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin-right: 25px;
+    margin-bottom: 120px;
+    /* to pad or move it around using `left` and `top` inside the parent */
+}
+.jexcel .editor .jupload{
+    top: 0px !important;
+    position: absolute;
+}
+.label-container{
+    position:fixed;
+    bottom:48px;
+    right:105px;
+    display:table;
+    visibility: hidden;
+}
+
+.label-text{
+    color:#FFF;
+    background:rgba(51,51,51,0.5);
+    display:table-cell;
+    vertical-align:middle;
+    padding:10px;
+    border-radius:3px;
+}
+
+.label-arrow{
+    display:table-cell;
+    vertical-align:middle;
+    color:#333;
+    opacity:0.5;
+}
+
+.float{
+    position:fixed;
+    width:60px;
+    height:60px;
+    bottom:40px;
+    right:40px;
+    background-color:#06C;
+    color:#FFF;
+    border-radius:50px;
+    text-align:center;
+    box-shadow: 2px 2px 3px #999;
+}
+
+.my-float{
+    font-size:24px;
+    margin-top:18px;
+}
+
+a.float + div.label-container {
+visibility: hidden;
+opacity: 0;
+transition: visibility 0s, opacity 0.5s ease;
+}
+
+a.float:hover + div.label-container{
+visibility: visible;
+opacity: 1;
+}
+.fab-container {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    z-index: 999;
+    cursor: pointer;
+  }
+  
+  .fab-icon-holder {
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+    background: #016fb9;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .fab-icon-holder:hover {
+    opacity: 0.8;
+  }
+  
+  .fab-icon-holder i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 25px;
+    color: #ffffff;
+  }
+  
+  .fab {
+    width: 60px;
+    height: 60px;
+    background: #d23f31;
+  }
+  
+  .fab-options {
+    list-style-type: none;
+    margin: 0;
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: scale(0);
+    transform-origin: 85% bottom;
+  }
+  
+  .fab:hover+.fab-options,
+  .fab-options:hover {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .fab-options li {
+    display: flex;
+    justify-content: flex-end;
+    padding: 5px;
+  }
+  
+  .fab-label {
+    padding: 2px 5px;
+    align-self: center;
+    user-select: none;
+    white-space: nowrap;
+    border-radius: 3px;
+    font-size: 16px;
+    background: #666666;
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    margin-right: 10px;
+  }
+  .dialog-background{
+    background: none repeat scroll 0 0 rgba(255, 255, 255, 0.4);
+    height: 100%;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: 1000000;
+}
+.dialog-loading-wrapper {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    height: 100px;
+    left: 50%;
+    margin-left: -50px;
+    margin-top: -50px;
+    position: fixed;
+    top: 50%;
+    width: 100px;
+    z-index: 9999999;
+}
+.dialog-loading-icon {
+    background-color: #cfcfcf !important;
+    border-radius: 13px;
+    display: block;
+    height: 100px;
+    line-height: 100px;
+    margin: 0;
+    padding: 1px;
+    text-align: center;
+    width: 100px;
+}

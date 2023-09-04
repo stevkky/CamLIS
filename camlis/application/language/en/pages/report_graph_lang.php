@@ -1,0 +1,19 @@
+<?php
+$lang['condition_for_generation'] = "Condition for report generation";
+$lang['generate_report'] = "Generate Report";
+$lang['reset'] = 'Reset';
+$lang['type_of_report'] = "Type of report";
+$lang['laboratory'] = "Laboratory";
+$lang['laboratories'] = "Laboratories";
+$lang['sample_type'] = "Sample type";
+$lang['test'] = "Test";
+$lang['result'] = "Result";
+$lang['all'] = "All";
+$lang['received_date'] = "Received date";
+$lang['graph_1'] = "1. Patients by age group";
+$lang['graph_2'] = "2. Distribution by sample source";
+$lang['graph_3'] = "3. Distribution by sample type";
+$lang['graph_4'] = "4. Comparing sample type by month";
+$lang['graph_5'] = "5. Distribution by department";
+$lang['graph_6'] = "6. Number of patients by month";
+$lang['graph_7'] = "7. Number of Test by month";

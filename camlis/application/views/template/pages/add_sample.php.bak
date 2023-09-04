@@ -1,0 +1,234 @@
+<script>
+	var pid						= null;
+	var patient_info            = null;
+    var sample_descriptions     = JSON.parse('<?php echo json_encode($sample_descriptions); ?>');
+	var msg_choose_testDt		= "<?php echo _t('sample.msg.choose_testDt');				?>";
+	var msg_required_data		= "<?php echo _t('global.msg.fill_required_data');			?>";
+	var msg_must_save_sample	= "<?php echo _t('sample.msg.must_save_sample');			?>";
+	var msg_must_assign_test	= "<?php echo _t('sample.msg.must_assign_test');			?>";
+	var msg_must_select_test	= "<?php echo _t('sample.msg.must_select_test');			?>";
+	var msg_must_select_sample	= "<?php echo _t('sample.msg.choose_sample');				?>";
+	var msg_save_success		= "<?php echo _t('global.msg.save_success');				?>";
+	var msg_save_fail			= "<?php echo _t('global.msg.save_fail');					?>";
+	var msg_col_rec_dt_error	= "<?php echo _t('sample.msg.col_rec_dt_error');			?>";
+	var msg_reject_cmt_err		= "<?php echo _t('global.msg.fill_required_data');			?>";
+	var msg_dob_not_after_now	= "<?php echo _t('sample.msg.dob_not_after_now');			?>";
+	var msg_test_rejected		= "<?php echo _t('sample.msg.test_is_reject');				?>";
+	var msg_choose_sample_test	= "<?php echo _t('sample.msg.must_choose_sample_test');		?>";
+	var msg_col_dt_vs_now		= "<?php echo _t('sample.msg.col_dt_vs_now');				?>";
+	var msg_rec_dt_vs_now		= "<?php echo _t('sample.msg.rec_dt_vs_now');				?>";
+	var label_print_result		= "<?php echo _t('sample.preview_result');					?>";
+	var label_department		= "<?php echo _t('global.department');						?>";
+	var label_sample			= "<?php echo _t('sample.sample_type');						?>";
+	var label_no_data			= "<?php echo _t('global.no_data');							?>";
+	var label_choose_performer	= "<?php echo _t('sample.choose_performer');				?>";
+	var label_sample_desription	= "<?php echo _t('sample.sample_desc');				        ?>";
+    var label_weight1       	= "<?php echo _t('sample.weight1');				            ?>";
+    var label_weight2	        = "<?php echo _t('sample.weight2');				            ?>";
+	var msg_loading				= "<?php echo _t('global.plz_wait');						?>";
+	var msg_saving				= "<?php echo _t('global.saving');							?>";
+	var q_delete_patient_sample	= "<?php echo _t('sample.q.delete_patient_sample');			?>";
+	var msg_delete_fail			= "<?php echo _t('global.msg.delete_fail');					?>";
+</script>
+
+<div class="col-sm-12">
+	<div class="form-vertical" style="border: 2px solid #d7d7d7; padding: 12px;">
+		<div class="row">
+			<div class="col-sm-4">
+				<label class="control-label">
+					<?php echo _t('patient.find_patient_id'); ?>
+				</label>
+                <form id="frm-search-patient">
+                    <div class="input-group">
+                        <input type="text" name="search_patient_id" id="search_patient_id" class="form-control" placeholder="<?php echo _t('patient.patient_id'); ?>" value="<?php echo $patient_id; ?>" autocomplete="off" autofocus>
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-primary" id="btnSearchPatient"><?php echo _t('global.search'); ?>&nbsp;<i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </form>
+			</div>
+			<div class="col-sm-1">
+				<label class="control-label"> </label>
+				<div style='padding-top:10px; font-weight:bold;' class="text-center"><?php echo _t('sample.or'); ?></div>
+			</div>
+			<div class="col-sm-2">
+				<label class="control-label">&nbsp;</label>
+				<div>
+					<button type="button" class="btn btn-primary" id="btnNewPatient"><i class="fa fa-user-plus"></i>&nbsp;
+						<?php echo _t('patient.new_patient'); ?>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- No patient result -->
+	<div class="well text-center text-red" id="no-result" style="display:none;"><b><?php echo _t('global.no_result'); ?></b></div>
+
+	<div id="patient-info-wrapper">
+		<!-- Patient's Info View -->
+		<div id="patient-info-view" style="display: none;">
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.patient_name'); ?> :</label>
+				</div>
+				<div class="col-sm-10 patient-name"></div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.sex'); ?> :</label>
+				</div>
+				<div class="col-sm-10 gender"></div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.age'); ?> :</label>
+				</div>
+				<div class="col-sm-10 age">
+					<span class="age-year"></span> <?php echo _t('global.year') ?> &nbsp;
+					<span class="age-month"></span> <?php echo _t('global.month') ?> &nbsp;
+					<span class="age-day"></span> <?php echo _t('global.day') ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.phone'); ?> :</label>
+				</div>
+				<div class="col-sm-10 phone"></div>
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label"><?php echo _t('patient.address'); ?> :</label>
+				</div>
+				<div class="col-sm-10 address">
+					<span class="address-village"></span> <?php echo _t('Village').' -'; ?> &nbsp;
+					<span class="address-commune"></span> <?php echo _t('Commune').' -'; ?> &nbsp;
+					<span class="address-district"></span> <?php echo _t('District').' -'; ?>
+					<span class="address-province"></span> <?php echo _t('Province') ?>
+				</div>
+			</div>
+		</div>
+
+		<!-- Patient Form -->
+		<form id="patient-info-form" class="well form-vertical" style="display: none;">
+			<div class="row">
+				<div class="col-sm-2">
+					<label class="control-label">
+						<?php echo _t('patient.patient_id'); ?>
+					</label>
+					<input type="text" name="patient_id" id="patient_id" class="form-control">
+				</div>
+                <div class="col-sm-2">
+                    <label class="control-label">
+                        <?php echo _t('patient.patient_name'); ?>
+                    </label>
+                    <input type="text" name="patient_name" id="patient_name" class="form-control">
+                </div>
+
+				<div class="col-sm-6">
+					<label for="patient_dob" class="control-label hint--right hint--error hint--always">
+						<?php echo _t('patient.dob').' / '._t('global.age'); ?>
+					</label>
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1"><i class="glyphicon glyphicon-calendar"></i></span>
+                        <input type="text" class="form-control" id="patient_dob">
+                        <span class="input-group-addon" id="basic-addon1"><b><?php echo _t('global.age'); ?></b></span>
+                        <input type="text" class="form-control" id="patient_age" placeholder="<?php echo _t('global.year'); ?>" onkeypress="return isNumber(event);"
+                               maxlength="2">
+                        <span class="input-group-addon" id="basic-addon1"></span>
+                        <input type="text" class="form-control" id="patient_agem" maxlength="2"
+                               style="width:100px;" placeholder="<?php echo _t('global.month'); ?>" onkeypress="return isNumber(event);">
+                        <span class="input-group-addon" id="basic-addon1"></span>
+                        <input type="text" class="form-control" id="patient_aged" maxlength="2"
+                               style="width:100px;" placeholder="<?php echo _t('global.day'); ?>" onkeypress="return isNumber(event);">
+                    </div>
+				</div>
+                <div class="col-sm-2">
+                    <label class="control-label">
+                        <?php echo _t('patient.sex'); ?>
+                    </label>
+                    <div>
+                        <label class="control-label" style="cursor:pointer;">
+                            <input type="radio" name='patient_sex' value="1">&nbsp;
+                            <?php echo _t('global.male'); ?>
+                        </label>
+                        &nbsp;&nbsp;
+                        <label class="control-label" style="cursor:pointer;">
+                            <input type="radio" name='patient_sex' value="2">&nbsp;
+                            <?php echo _t('global.female'); ?>
+                        </label>
+                    </div>
+                </div>
+			</div>
+			<div class="row">
+				<div class="col-sm-4">
+					<label class="control-label">
+						<?php echo _t('patient.phone'); ?>
+					</label>
+					<input type="text" class="form-control" name="phone" id="phone">
+				</div>
+				<div class="col-sm-8">
+					<label class="control-label">
+						<?php echo _t('patient.address'); ?>
+					</label>
+					<div class="col-sm-12" style="padding:0;">
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="province" id="province" class="form-control" data-get="district">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_province'); ?>
+								</option>
+								<?php
+									foreach($provinces as $pro) {
+										$app_lang	= empty($app_lang) ? 'en' : $app_lang;
+										$name		= 'name_'.$app_lang;
+
+										echo "<option value='".$pro->code."'>".$pro->$name."</option>";
+									}
+								?>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="district" id="district" class="form-control" data-get="commune">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_district'); ?>
+								</option>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0;">
+							<select name="commune" id="commune" class="form-control" data-get="village">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_commune'); ?>
+								</option>
+							</select>
+						</div>
+						<div class="col-sm-3" style="padding-left:0; padding-right:0">
+							<select name="village" id="village" class="form-control">
+								<option value="-1" style="color:#d8d5d5;">
+									<?php echo _t('global.choose_village'); ?>
+								</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row" style="margin-top:30px;">
+				<div class="col-sm-12" style="text-align: right;">
+					<button type="button" class="btn btn-primary" id="btnSavePatient"><i class="fa fa-floppy-o"></i>&nbsp;<?php echo _t('global.save'); ?></button>
+					<button type="button" class="btn btn-default" id="btnCancelPatient"><i class="fa fa-remove"></i>&nbsp;<?php echo _t('global.cancel'); ?></button>
+				</div>
+			</div>
+		</form>
+		<input type="hidden" id="patient-id" data-value="">
+	</div>
+
+	<!-- Sample Forms -->
+	<div id="sample-form-wrapper" style="display:none; margin-top: 40px;">
+		<h4 class="content-header"><?php echo _t('sample.new_sample'); ?></h4>
+		<hr>
+		<div id="sample-forms">
+			<button type="button" id="btnMore" class="btn btn-flat btn-primary col-sm-12"><i class="fa fa-plus"></i>
+				<?php echo _t('sample.add_sample'); ?>
+			</button>
+		</div>
+	</div>
+</div>
